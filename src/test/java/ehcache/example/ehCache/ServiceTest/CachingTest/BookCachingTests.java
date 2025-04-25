@@ -1,6 +1,8 @@
 package ehcache.example.ehCache.ServiceTest.CachingTest;
 
 import ehcache.example.ehCache.Dao.Bookdao;
+import ehcache.example.ehCache.Dto.AdminDto;
+import ehcache.example.ehCache.Entity.Admin;
 import ehcache.example.ehCache.Entity.Book;
 import ehcache.example.ehCache.Service.BookService;
 import org.assertj.core.api.Assertions;
@@ -14,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import javax.cache.CacheManager;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -48,6 +51,49 @@ public class BookCachingTests {
         // Clear cache before each test
         cacheManager.getCache("books").clear();
     }
+
+
+
+    @Test
+    public void BookService_getAllBooksCache_RetrurnsAllBooks()throws Exception {
+
+        Book book2=Book.builder().name("woha")
+                .publisher("aida").category("animals").author("7iho")
+                .build();
+
+        Mockito.when(bookdao.findAll()).thenReturn(List.of(book,book2)) ;
+
+        List <Book> books =bookService.getAllBooks() ;
+
+
+        List<Book> booksFromCache =bookService.getAllBooks();
+
+
+
+        verify(bookdao, times(1)).findAll();
+
+        Assertions.assertThat(books.size()).isEqualTo(booksFromCache.size());
+
+        //assert that the first index has same value in both Lists :
+        Assertions.assertThat(books.get(0).getName()).isEqualTo(booksFromCache.get(0).getName());
+        Assertions.assertThat(books.get(0).getId()).isEqualTo(booksFromCache.get(0).getId());
+        Assertions.assertThat(books.get(0).getCategory()).isEqualTo(booksFromCache.get(0).getCategory());
+
+
+        //assert that the second index has same value in both Lists :
+        Assertions.assertThat(books.get(1).getName()).isEqualTo(booksFromCache.get(1).getName());
+        Assertions.assertThat(books.get(1).getId()).isEqualTo(booksFromCache.get(1).getId());
+        Assertions.assertThat(books.get(1).getCategory()).isEqualTo(booksFromCache.get(1).getCategory());
+
+
+
+
+
+
+
+    }
+
+
 
 
 

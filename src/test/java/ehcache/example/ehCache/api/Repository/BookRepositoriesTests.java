@@ -159,7 +159,7 @@ public class BookRepositoriesTests {
 
         //Act
 
-        book1.setAuthor("karakouz");
+        book1.setAuthor("kakouz");
         Book updated_book=bookdao.save(book1) ;
 
 
@@ -167,7 +167,7 @@ public class BookRepositoriesTests {
         //Assert
 
         Assertions.assertThat(updated_book.getAuthor()).isNotNull();
-        Assertions.assertThat(updated_book.getAuthor()).isEqualTo("karakouz" ) ;
+        Assertions.assertThat(updated_book.getAuthor()).isEqualTo("kakouz" ) ;
 
 
     }
@@ -177,7 +177,7 @@ public class BookRepositoriesTests {
 
         // Arrange
         Book book1=Book.builder().id(1).author("king").name("hhh")
-                .category("kids").edition("idk").publisher("5altek")
+                .category("kids").edition("idk").publisher("5aek")
                 .build();
         bookdao.save(book1);
 

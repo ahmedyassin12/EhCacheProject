@@ -1,9 +1,6 @@
 package ehcache.example.ehCache.Entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
@@ -25,6 +22,10 @@ public class Book implements Serializable{
         private String publisher;
         private String edition;
 
+
+        @ManyToOne
+        @JoinColumn(name="admin_id")
+        private Admin admin;
 
 
 

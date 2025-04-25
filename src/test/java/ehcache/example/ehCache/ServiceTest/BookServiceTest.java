@@ -121,11 +121,9 @@ books.add(book2);
 
     when(bookdao.findAll()).thenReturn(books) ;
 
-    Iterator<Book> allBooks=bookService.getAllBooks();
 
-    List<Book> book_List= new ArrayList<>();
+    List<Book> book_List= bookService.getAllBooks();
 
-    allBooks.forEachRemaining(book_List::add);
 
 
 

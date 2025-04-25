@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import javax.cache.CacheManager;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -50,7 +51,33 @@ public class AdminCachingTests {
     }
 
     @Test
-    public void BookService_GetAdminByIDCache_returnAdminDto(){
+    public void AdminService_getAllAdminsCache_RetrurnsAllAdminsDto()throws Exception {
+
+        Admin admin2=Admin.builder().id(2).name("woha")
+                .username("+18").password("secret")
+                .build();
+
+        Mockito.when(adminDao.findAll()).thenReturn(List.of(admin,admin2)) ;
+
+        List <AdminDto> adminDtos =adminService.getAllAdmins() ;
+
+
+        List<AdminDto> adminFromCache =adminService.getAllAdmins();
+
+
+
+        verify(adminDao, times(1)).findAll();
+
+        Assertions.assertThat(adminDtos.size()).isEqualTo(adminFromCache.size());
+
+
+
+
+
+
+    }
+    @Test
+    public void AdminService_GetAdminByIDCache_returnAdminDto(){
 
 
         //Act
@@ -107,7 +134,7 @@ public class AdminCachingTests {
     }
 
     @Test
-    public void BookService_DeleteBookCache_returnNull(){
+    public void AdminService_DeleteAdminCache_returnNull(){
 
         // Setup
         when(adminDao.findById(IdAdmin)).thenReturn(Optional.of(admin));
@@ -127,9 +154,10 @@ public class AdminCachingTests {
         verify(adminDao, times(2)).findById(IdAdmin);
 
 
-
-
     }
+
+
+
 
 
 }

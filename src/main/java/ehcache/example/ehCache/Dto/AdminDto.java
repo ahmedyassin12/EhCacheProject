@@ -1,7 +1,6 @@
 package ehcache.example.ehCache.Dto;
 
 import ehcache.example.ehCache.Entity.Admin;
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,8 +13,11 @@ import lombok.NoArgsConstructor;
 public class AdminDto {
 
 
+
     private String name ;
 
+
+    @UsernameValidator()
     private String username;
 
 

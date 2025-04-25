@@ -16,6 +16,8 @@ import javax.cache.CacheManager;
 import javax.cache.Caching;
 import javax.cache.spi.CachingProvider;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 import static ch.qos.logback.classic.spi.ThrowableProxyVO.build;
 import static org.ehcache.expiry.ExpiryPolicy.*;
@@ -47,6 +49,21 @@ import static org.ehcache.expiry.ExpiryPolicy.*;
                             ResourcePoolsBuilder.heap(1000) // Max entries in heap
 
                     ).build();
+
+            CacheConfiguration<Long, List > GetAllAdminconfiguration =
+                    CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                             Long.class , // Key type
+                            List.class,  // Value type
+                            ResourcePoolsBuilder.heap(1000) // Max entries in heap
+
+                    ).build();
+            CacheConfiguration<Long, List > GetAllBookconfiguration =
+                    CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                            Long.class , // Key type
+                            List.class,  // Value type
+                            ResourcePoolsBuilder.heap(1000) // Max entries in heap
+
+                    ).build();
             cacheManager.createCache("books", // e to match @Cacheable
                     Eh107Configuration.fromEhcacheCacheConfiguration(Bookconfiguration));
 
@@ -54,6 +71,12 @@ import static org.ehcache.expiry.ExpiryPolicy.*;
                     Eh107Configuration.fromEhcacheCacheConfiguration(Adminconfiguration)
             );
 
+            cacheManager.createCache("Alladmins",
+                    Eh107Configuration.fromEhcacheCacheConfiguration(GetAllAdminconfiguration)
+            );
+            cacheManager.createCache("Allbooks",
+                    Eh107Configuration.fromEhcacheCacheConfiguration(GetAllBookconfiguration)
+            );
             return cacheManager;
         }
     }
