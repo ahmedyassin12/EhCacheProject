@@ -14,10 +14,10 @@ import static ehcache.example.ehCache.Entity.Permission.*;
 public enum Role {
     ADMIN(
             Set.of(  // Explicitly use Set.of() for clarity
-                    ADMIN_CREATE,
                     ADMIN_UPDATE,
                     ADMIN_DELETE,
                     ADMIN_READ,
+
                     BOOK_CREATE,
                     BOOK_UPDATE,
                     BOOK_DELETE,
@@ -26,9 +26,30 @@ public enum Role {
 
     ),
 
-    OMK(
-            Set.of()
+    SUPER_ADMIN(
+            Set.of
+                    (ADMIN_CREATE,
+                    ADMIN_UPDATE,
+                    ADMIN_DELETE,
+                    ADMIN_READ,
+                    BOOK_CREATE,
+                    BOOK_UPDATE,
+                    BOOK_DELETE,
+                    BOOK_READ
+
+                    )
     );
+
+
+
+
+
+
+
+
+
+
+
 
     @Getter
     private final Set<Permission> permissions;
@@ -41,6 +62,11 @@ public enum Role {
         authorities.add(new SimpleGrantedAuthority("ROLE_" + this.name()));
         return authorities;
     }
+
+
+
+
+
 
 
 

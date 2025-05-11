@@ -2,7 +2,6 @@ package ehcache.example.ehCache.JWTconfiguration;
 
 
 import lombok.RequiredArgsConstructor;
-import org.hibernate.sql.Update;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,7 +16,6 @@ import org.springframework.security.web.authentication.logout.LogoutHandler;
 
 import static ehcache.example.ehCache.Entity.Role.ADMIN;
 import static org.springframework.http.HttpMethod.*;
-import static org.springframework.security.authorization.AuthorityReactiveAuthorizationManager.hasRole;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 
@@ -68,6 +66,7 @@ public class SecurityConfiguration {
                                          )
                          .permitAll()
 
+
                                  //our Secured EndPoint
 
 
@@ -77,10 +76,10 @@ public class SecurityConfiguration {
                                  .requestMatchers(DELETE,"/api/C1/Book/**").hasRole(ADMIN.name())
                                  .requestMatchers(PUT,"/api/C1/Book/**").hasRole(ADMIN.name())
 
-                                 .requestMatchers(GET,"/api/C2/Admin/**").hasRole(ADMIN.name())
-                                 .requestMatchers(POST,"/api/C2/Admin/**").hasRole(ADMIN.name())
-                                 .requestMatchers(DELETE,"/api/C2/Admin/**").hasRole(ADMIN.name())
-                                 .requestMatchers(PUT,"/api/C2/Admin/**").hasRole(ADMIN.name())
+                                 .requestMatchers(GET, "/api/C2/user/**").hasRole(ADMIN.name())
+                                 .requestMatchers(POST, "/api/C2/user/**").hasRole(ADMIN.name())
+                                 .requestMatchers(DELETE, "/api/C2/user/**").hasRole(ADMIN.name())
+                                 .requestMatchers(PUT, "/api/C2/user/**").hasRole(ADMIN.name())
 
 
 

@@ -1,33 +1,33 @@
+
 package ehcache.example.ehCache.ServiceTest.CachingTest;
 
 import ehcache.example.ehCache.Dao.Bookdao;
-import ehcache.example.ehCache.Dto.AdminDto;
-import ehcache.example.ehCache.Entity.Admin;
+import ehcache.example.ehCache.Dao.UserDao;
+import ehcache.example.ehCache.Dto.BookDto;
+import ehcache.example.ehCache.Dto.CreateBookDto;
 import ehcache.example.ehCache.Entity.Book;
+import ehcache.example.ehCache.Entity.Role;
+import ehcache.example.ehCache.Entity.User;
 import ehcache.example.ehCache.Service.BookService;
+import ehcache.example.ehCache.mapper.BookMapper;
 import org.assertj.core.api.Assertions;
-import org.hibernate.mapping.Any;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.mockito.internal.matchers.Null;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-
 import javax.cache.CacheManager;
 import java.util.List;
-import java.util.Optional;
-
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.mockito.Mockito.*;
 
 @SpringBootTest
+@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 public class BookCachingTests {
 
 
-    @MockBean
-    private Bookdao bookdao;
+    @Autowired
+    private Bookdao bookRepository;
 
     @Autowired
     BookService bookService ;
@@ -38,87 +38,81 @@ public class BookCachingTests {
     private Long IdBook;
     private Book book;
 
+    private User user;
+    private CreateBookDto createBookDto;
+    @Autowired
+    private UserDao userDao;
 
 
     @BeforeEach
     void setUp() {
-         IdBook=1l ;
-         book=Book.builder().id(IdBook).author("king")
-                .category("kids").edition("idk").publisher("ltek")
-                .build();
-        when(bookdao.findById(IdBook)).thenReturn(Optional.ofNullable(book));
 
+        IdBook=1l;
+        user= User.builder().password("T9x!qP4@vZ7#fLba1")
+                .username("qaasdfmjbbbj").name("hiya").id(1l) .email("fqmsldk@gmail.com")
+                .role(Role.ADMIN)
+
+                .enabled(true)
+                .build() ;
+        userDao.save(user);
+
+
+        createBookDto= CreateBookDto.builder()
+                .author("king")
+                .edition("idk")
+                .publisher("tek")
+                .category("fathiza")
+                .user_Id(1l)
+                .name("broo")
+                .build();
+
+        bookService.addBook(createBookDto);
         // Clear cache before each test
-        cacheManager.getCache("books").clear();
+        cacheManager.getCache("bookDtos").clear();
+        cacheManager.getCache("AllbookDtos").clear();
+
+
     }
 
 
 
     @Test
-    public void BookService_getAllBooksCache_RetrurnsAllBooks()throws Exception {
+    public void BookService_getAllBookDtosCache_RetrurnsAllBookDtos()throws Exception {
 
-        Book book2=Book.builder().name("woha")
-                .publisher("aida").category("animals").author("7iho")
-                .build();
-
-        Mockito.when(bookdao.findAll()).thenReturn(List.of(book,book2)) ;
-
-        List <Book> books =bookService.getAllBooks() ;
+        List <BookDto> bookDtos =bookService.getAllBooks() ;
 
 
-        List<Book> booksFromCache =bookService.getAllBooks();
+        List<BookDto> bookDtosFromCache =(List<BookDto>) cacheManager.getCache("AllbookDtos").get(1L);
 
 
 
-        verify(bookdao, times(1)).findAll();
 
-        Assertions.assertThat(books.size()).isEqualTo(booksFromCache.size());
+        Assertions.assertThat(bookDtos.size()).
+                isEqualTo(bookDtosFromCache.size());
 
         //assert that the first index has same value in both Lists :
-        Assertions.assertThat(books.get(0).getName()).isEqualTo(booksFromCache.get(0).getName());
-        Assertions.assertThat(books.get(0).getId()).isEqualTo(booksFromCache.get(0).getId());
-        Assertions.assertThat(books.get(0).getCategory()).isEqualTo(booksFromCache.get(0).getCategory());
-
-
-        //assert that the second index has same value in both Lists :
-        Assertions.assertThat(books.get(1).getName()).isEqualTo(booksFromCache.get(1).getName());
-        Assertions.assertThat(books.get(1).getId()).isEqualTo(booksFromCache.get(1).getId());
-        Assertions.assertThat(books.get(1).getCategory()).isEqualTo(booksFromCache.get(1).getCategory());
+        Assertions.assertThat(bookDtos.get(0).getName()).isEqualTo(bookDtosFromCache.get(0).getName());
+        Assertions.assertThat(bookDtos.get(0).getCategory()).isEqualTo(bookDtosFromCache.get(0).getCategory());
+        Assertions.assertThat(bookDtos.get(0).getEdition()).isEqualTo(bookDtosFromCache.get(0).getEdition());
+        Assertions.assertThat(bookDtos.get(0).getPublisher()).isEqualTo(bookDtosFromCache.get(0).getPublisher());
+        Assertions.assertThat(bookDtos.get(0).getAuthor()).isEqualTo(bookDtosFromCache.get(0).getAuthor());
 
 
 
 
+        //now add another book to see if Its Evicted in our method :
+        CreateBookDto  createBookDto1=CreateBookDto.builder().name("woha")
+                .publisher("aida").category("animals").author("7iho").edition("scnd").user_Id(user.getId())
+                .build();
+        bookService.addBook(createBookDto1 );
 
+        List<BookDto> book_check_Eviction=bookService.getAllBooks() ;
+        List<BookDto> cachedList = (List<BookDto>) cacheManager.getCache("AllbookDtos").get(1L);
 
+        Assertions.assertThat(book_check_Eviction.size()).isEqualTo(cachedList.size()) .isEqualTo(2);
 
-    }
+        Assertions.assertThat(book_check_Eviction.get(0).getEdition()).isEqualTo(cachedList.get(0).getEdition());
 
-
-
-
-
-    @Test
-    public void BookService_UpdateBookCache_returnBook(){
-
-
-        //Continue Arrangement
-
-        when(bookdao.save(Mockito.any(Book.class))).thenReturn(book) ;
-
-        //Act
-        Book book1=bookService.getBook(IdBook);
-
-        book1.setName("kawther");
-        book1.setAuthor("lecringe");
-
-        Book updatedBook=bookService.updateBook(book1);
-
-        Book book2=bookService.getBook(IdBook);
-
-        //Assert
-        verify(bookdao, times(1)).findById(IdBook);
-        Assertions.assertThat(updatedBook.getName()).isEqualTo(book2.getName()) ;
-        Assertions.assertThat(updatedBook.getAuthor()).isEqualTo(book2.getAuthor()) ;
 
 
 
@@ -126,53 +120,96 @@ public class BookCachingTests {
     }
 
 
+
+
+
+        @Test
+        public void BookService_UpdateBookDtoCache_returnsBookDto(){
+
+
+            //Continue Arrangement
+
+
+            //Act 1 : testing Update Cache on our getBook method :
+            BookDto bookDto1 =bookService.getBook(IdBook);
+
+            BookDto bookDtoFromCache =(BookDto) cacheManager.getCache("bookDtos").get(IdBook);
+
+            Assertions.assertThat(bookDtoFromCache.getName()).isEqualTo(bookDto1.getName()) ;
+            Assertions.assertThat(bookDtoFromCache.getAuthor()).isEqualTo(bookDto1.getAuthor()) ;
+
+            bookDto1.setName("kawther");
+            bookDto1.setAuthor("lecringe");
+
+            CreateBookDto createBookDto = BookMapper.returnCreateBookDto(bookDto1,user.getId()); // Debug here if needed
+            BookDto updatedBookDto = bookService.updateBookById(createBookDto, IdBook); // Now debug this line
+           BookDto bookDto2FromCache =(BookDto) cacheManager.getCache("bookDtos").get(IdBook);
+
+            //Assert
+            Assertions.assertThat(updatedBookDto.getName()).isEqualTo("kawther") ;
+            Assertions.assertThat(updatedBookDto.getAuthor()).isEqualTo("lecringe") ;
+
+            Assertions.assertThat(updatedBookDto.getName()).isEqualTo(bookDto2FromCache.getName()) ;
+            Assertions.assertThat(updatedBookDto.getAuthor()).isEqualTo(bookDto2FromCache.getAuthor()) ;
+
+            //Act 2 : testing Update Cache on our getAllBooks method :
+
+            //inorder to create cache after evicting it
+
+            bookService.getAllBooks() ;
+      List<BookDto> bookDtosFromCache =(List<BookDto>) cacheManager.getCache("AllbookDtos").get(1L);
+
+
+      Assertions.assertThat(bookDtosFromCache.get(0).getName()).isEqualTo(updatedBookDto.getName());
+            Assertions.assertThat(bookDtosFromCache.get(0).getAuthor()).isEqualTo(updatedBookDto.getAuthor());
+
+        }
+
+            @Test
+            public void BookService_GetBookDtoByIDCache_returnBookDto(){
+
+                //Arrange
+
+
+                //Act
+                BookDto book1=bookService.getBook(IdBook);
+
+                BookDto bookDtoFromCache =(BookDto) cacheManager.getCache("bookDtos").get(IdBook);
+
+                //Assert
+
+
+                Assertions.assertThat(bookDtoFromCache).isNotNull() ;
+                Assertions.assertThat(book1.toString()).isEqualTo(bookDtoFromCache.toString());
+
+
+
+
+            }
+
+
     @Test
-    public void BookService_GetBookByIDCache_returnBook(){
-
-        //Arrange
-
-        when(bookdao.findById(IdBook)).thenReturn(Optional.ofNullable(book));
-
-        //Act
-        Book book1=bookService.getBook(IdBook);
-        Book book2=bookService.getBook(IdBook);
-
-        //Assert
-
-        verify(bookdao, times(1)).findById(IdBook);
-
-        Assertions.assertThat(book1).isEqualTo(book2);
-
-
-
-
-    }
-
-    @Test
-    public void BookService_DeleteBookCache_returnNull(){
+    public void BookService_DeleteBookDtoCache_returnNull(){
 
         // Setup
-        when(bookdao.findById(IdBook)).thenReturn(Optional.of(book));
 
         // Prime cache
         bookService.getBook(IdBook);
 
         // Verify deletion
         bookService.deleteBook(IdBook);
-        verify(bookdao).deleteById(IdBook);
 
-        // Verify cache was cleared
-        assertThat(cacheManager.getCache("books").get(IdBook)).isNull();
+        // Verify cache "booDtos" was cleared
+        assertThat(cacheManager.getCache("bookDtos").get(IdBook)).isNull();
 
-        // Subsequent call should hit DB again
-        bookService.getBook(IdBook);
-        verify(bookdao, times(2)).findById(IdBook);
+        //verify chache "allbookDtos" was cleared
 
-
-
+        assertThat(cacheManager.getCache("AllbookDtos").get(1L)).isNull();
 
     }
 
 
 
 }
+
+

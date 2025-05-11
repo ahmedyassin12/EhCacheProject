@@ -1,4 +1,4 @@
-package ehcache.example.ehCache.Dto;
+package ehcache.example.ehCache.CustomeAnnotation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

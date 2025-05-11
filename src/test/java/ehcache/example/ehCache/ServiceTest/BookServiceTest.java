@@ -1,49 +1,90 @@
 package ehcache.example.ehCache.ServiceTest;
 
 import ehcache.example.ehCache.Dao.Bookdao;
+import ehcache.example.ehCache.Dao.UserDao;
+import ehcache.example.ehCache.Dto.BookDto;
+import ehcache.example.ehCache.Dto.CreateBookDto;
+import ehcache.example.ehCache.Entity.User;
 import ehcache.example.ehCache.Entity.Book;
+import ehcache.example.ehCache.Entity.Role;
 import ehcache.example.ehCache.Service.BookService;
+import ehcache.example.ehCache.mapper.BookMapper;
+import ehcache.example.ehCache.validator.ObjectValidator;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-
 import static org.mockito.Mockito.*;
+
+
+
 @ExtendWith(MockitoExtension.class)
 
 public class BookServiceTest {
 
     @Mock
-    private Bookdao bookdao ;
+    private Bookdao bookRepository;
+
+    @Mock
+    private UserDao userDao ;
+
+    @Mock
+    private ObjectValidator<CreateBookDto> bookValidator; // Add this mock
+     // Add this mock
 
     @InjectMocks
     private BookService bookService ;
+
+
+    private User user ;
+    private CreateBookDto createBookDto;
+
+    @BeforeEach
+    void setUp() {
+
+         user= User.builder().password("hohoho")
+                .username("dqsmlfj").name("hiya").id(1l) .email("fqmsldk@gmail.com")
+                .role(Role.ADMIN)
+                .enabled(true)
+                .build() ;
+
+
+         createBookDto= CreateBookDto.builder().author("king")
+                .category("kids")
+                .edition("idk")
+                .publisher("tek")
+                .category("fathiza")
+                .user_Id(1l)
+                 .name("broo")
+                .build();
+
+    }
 
 
 
     @Test
     public void BookService_AddBook_returnBook(){
 
-        Book book=Book.builder().author("king")
-                .category("kids").edition("idk").publisher("5altek")
-                .build();
+        // Mock validation to pass (no errors)
+       doNothing().when(bookValidator).validate(createBookDto);
 
-        when(bookdao.save(Mockito.any(Book.class))).thenReturn(book) ;
+        when(userDao.findById(1l)).thenReturn(Optional.of(user)) ;
+        when(bookRepository.save(Mockito.any(Book.class))).thenReturn(BookMapper.returnBook(createBookDto,user)) ;
 
 
-        Book savedBook=bookService.addBook(book) ;
+        BookDto savedBook=bookService.addBook(createBookDto) ;
 
         Assertions.assertThat(savedBook).isNotNull();
-        Assertions.assertThat(savedBook.getId()).isEqualTo(book.getId());
-        Assertions.assertThat(savedBook.getName()).isEqualTo(book.getName());
+        Assertions.assertThat(savedBook.getName()).isEqualTo(createBookDto.getName());
+        Assertions.assertThat(savedBook.getPublisher()).isEqualTo(createBookDto.getPublisher());
+        Assertions.assertThat(savedBook.getPublisher()).isEqualTo(createBookDto.getPublisher());
 
 
 
@@ -54,20 +95,23 @@ public class BookServiceTest {
 
 
     @Test
-    public void BookService_GetBookById_returnBook(){
+    public void BookService_GetBookById_returnBookDto(){
 
         Long IdBook=1l ;
-        Book book=Book.builder().id(IdBook).author("king")
-                .category("kids").edition("idk").publisher("ltek")
-                .build();
-            when(bookdao.findById(IdBook)).thenReturn(Optional.of(book)) ;
+
+        Book book = BookMapper.returnBook(createBookDto,user) ;
+        when(bookRepository.findById(IdBook)).thenReturn(Optional.of(book)) ;
 
 
-        Book findBook=bookService.getBook(IdBook) ;
+
+
+        BookDto findBook=bookService.getBook(IdBook) ;
        // System.out.println(findBook.getId()+);
 
         Assertions.assertThat(findBook).isNotNull();
-        Assertions.assertThat(findBook.getId()).isEqualTo(IdBook);
+        Assertions.assertThat(findBook.getPublisher()).isEqualTo(book.getPublisher());
+        Assertions.assertThat(findBook.getEdition()).isEqualTo(book.getEdition());
+        Assertions.assertThat(findBook.getName()).isEqualTo(book.getName());
 
 
 
@@ -76,26 +120,35 @@ public class BookServiceTest {
     @Test
     public void BookService_updateBookById_returnBook(){
 
+        doNothing().when(bookValidator).validate(createBookDto);
+
         Long IdBook=1l ;
-        Book book=Book.builder().id(1l).author("king")
-                .category("kids").edition("idk").publisher("ltek")
-                .build();
-        when(bookdao.findById(IdBook)).thenReturn(Optional.ofNullable(book)) ;
 
-        Book findBook=bookService.getBook(IdBook) ;
+        Book book = BookMapper.returnBook(createBookDto,user) ;
 
-        when(bookdao.save(Mockito.any(Book.class))).thenReturn(findBook) ;
 
-        findBook.setAuthor("haloo");
-        findBook.setName("the Trao");
 
-        Book Updated_Book=bookService.updateBookById(findBook,IdBook);
+        Book Updated_Book=BookMapper.returnBook(createBookDto,user);
+Updated_Book.setAuthor("hohoho");
+Updated_Book.setName("KInghong");
+Updated_Book.setId(IdBook);
+
+        when(bookRepository.findById(IdBook)).thenReturn(Optional.of(book)) ;
+        when(bookRepository.save(Mockito.any(Book.class))).thenReturn(Updated_Book) ;
+
+        createBookDto.setCategory("");
+
+        BookDto result=bookService.updateBookById(createBookDto,IdBook);
+
+
 
         // System.out.println(findBook.getId()+);
 
-        Assertions.assertThat(Updated_Book).isNotNull();
-        Assertions.assertThat(Updated_Book.getAuthor()).isEqualTo("haloo");
-        Assertions.assertThat(Updated_Book.getName()).isEqualTo("the Trao");
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result.getName()).isEqualTo("KInghong");
+
+       Assertions.assertThat(result.getName()).isNotEqualTo(book.getName());
+        Assertions.assertThat(result.getAuthor()).isNotEqualTo(book.getAuthor());
 
     }
 
@@ -103,35 +156,38 @@ public class BookServiceTest {
 
 
 @Test
-public void BookService_GetAllBooks_returnBooks(){
+public void BookService_GetAllBooks_returnBookDtos(){
 
 
 
     Book book1=Book.builder().id(1).author("king").name("hhh")
             .category("kids").edition("idk").publisher("altek")
+            .user(user)
             .build();
 
     Book book2=Book.builder().id(2).author("o2k")
-            .category("+18").edition("nam9hb").publisher("3amabozaka")
+            .category("+18").edition("nam9b").publisher("3amabozaka")
+            .user(user)
             .build();
 
 List<Book> books=new ArrayList<>();
 books.add(book1);
 books.add(book2);
 
-    when(bookdao.findAll()).thenReturn(books) ;
+
+    when( bookRepository.findAll()).thenReturn( books );
 
 
-    List<Book> book_List= bookService.getAllBooks();
+    List<BookDto>bookDtos = bookService.getAllBooks() ;
 
 
 
 
-    Assertions.assertThat(book_List).size().isEqualTo(2) ;
-    Assertions.assertThat(book_List.get(0).getName()).isEqualTo(book1.getName()) ;
-    Assertions.assertThat(book_List.get(1).getName()).isEqualTo(book2.getName()) ;
-    Assertions.assertThat(book_List.get(0).getId()).isEqualTo(book1.getId()) ;
-    Assertions.assertThat(book_List.get(1).getId()).isEqualTo(book2.getId()) ;
+    Assertions.assertThat(bookDtos).size().isEqualTo(2) ;
+    Assertions.assertThat(bookDtos.get(0).getName()).isEqualTo(book1.getName()) ;
+    Assertions.assertThat(bookDtos.get(1).getName()).isEqualTo(book2.getName()) ;
+    Assertions.assertThat(bookDtos.get(0).getCategory()).isEqualTo(book1.getCategory()) ;
+    Assertions.assertThat(bookDtos.get(1).getEdition()).isEqualTo(book2.getEdition()) ;
 
 
 }
@@ -147,7 +203,8 @@ books.add(book2);
                 .build();
 
 
-        doNothing().when(bookdao).deleteById(idBook);
+        doNothing().when(bookRepository).deleteById(idBook);
+        when(bookRepository.existsById(book.getId())).thenReturn(true );
 
         // Act
       String check=  bookService.deleteBook(idBook);
@@ -159,7 +216,6 @@ Assertions.assertThat(check).isEqualTo("Book deleted") ;
 
 
     }
-
 
 
 

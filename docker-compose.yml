@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres:
+    container_name: postgres_with_volume
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: book
+    ports:
+      - "5433:5432"  # Mapping host 5433 to container's 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - spring-boot-network
+
+  spring-boot-app:
+    container_name: spring-ehcache
+    image: spring/ehcache  # custome java image
+    ports:
+      - "9099:9090"  # Mapping host port 9099 to container port 9090
+    volumes:
+      - /mnt/c/ehCache/src:/ehCache/src
+
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/book
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+    networks:
+      - spring-boot-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - postgres  # Ensures postgres is started before spring-boot-app
+
+volumes:
+  postgres_data:  # Define the volume where PostgreSQL data will be stored
+
+networks:
+  spring-boot-network:
+    driver: bridge  # Default network driver
+

@@ -1,15 +1,15 @@
-package ehcache.example.ehCache.auth;
+package ehcache.example.ehCache.auth.Dto;
 
-import ehcache.example.ehCache.Dto.StrongPassword;
-import ehcache.example.ehCache.Dto.UsernameValidator;
+import ehcache.example.ehCache.CustomeAnnotation.StrongPassword;
+import ehcache.example.ehCache.CustomeAnnotation.UsernameValidator;
 import ehcache.example.ehCache.Entity.Role;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Date;
 
 @Data
 @Builder
@@ -19,6 +19,7 @@ public class RegisterRequest {
 
 
 
+    @NotEmpty
     private String name;
 
     @UsernameValidator
@@ -28,6 +29,8 @@ public class RegisterRequest {
 
     @Email
     private String email;
+
+    @NotNull
     private Role role;
 
 

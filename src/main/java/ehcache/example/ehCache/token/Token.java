@@ -1,6 +1,6 @@
 package ehcache.example.ehCache.token;
 
-import ehcache.example.ehCache.Entity.Admin;
+import ehcache.example.ehCache.Entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,8 +29,8 @@ public class Token {
 
 
     @ManyToOne
-    @JoinColumn(name="Admin_id")
-    private Admin admin;
+    @JoinColumn(name="User_id")
+    private User user;
 
 
     }

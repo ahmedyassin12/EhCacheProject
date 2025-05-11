@@ -1,4 +1,4 @@
-package ehcache.example.ehCache.Dto;
+package ehcache.example.ehCache.CustomeAnnotation;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -24,9 +24,13 @@ public class  StrongPasswordValidator
 
             // Early exit if all conditions are met
             if (hasUpper && hasLower && hasDigit && hasSpecial) return true;
+
+
         }
         return hasUpper && hasLower && hasDigit && hasSpecial;
     }
+
+
 
 }
 

@@ -1,6 +1,6 @@
 package ehcache.example.ehCache.JWTconfiguration;
 
-import ehcache.example.ehCache.Dao.AdminDao;
+import ehcache.example.ehCache.Dao.UserDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,12 +18,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 public class ApplicationConfig {
     @Autowired
-    private AdminDao repository;
+    private UserDao repository;
 
    @Bean
     public UserDetailsService UserDetailsService(){
 
-        return username -> repository.findAdminByUsername(username)
+        return username -> repository.findUserByUsername(username)
                 .orElseThrow(()->new UsernameNotFoundException ("User not found") ) ;
 
     }

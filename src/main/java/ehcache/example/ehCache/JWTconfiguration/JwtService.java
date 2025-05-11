@@ -8,11 +8,13 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+
+import static io.jsonwebtoken.Jwts.*;
 
 @Service
 public class JwtService {
@@ -55,8 +57,7 @@ public class JwtService {
 
         extraClaims.put("authorities", userDetails.getAuthorities()); // Use authorities directly
 
-        return  Jwts
-                .builder()
+        return  builder()
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
@@ -76,10 +77,10 @@ public class JwtService {
 
     }
 
+    //change
     private boolean IsTokenExpired(String token) {
 
 
-        if(extractExpiration(token).before(new Date())) System.out.println("yes expired hh");
         return  extractExpiration(token).before(new Date()) ;
 
 
@@ -94,11 +95,11 @@ public class JwtService {
 
     }
 
+    //to change :
     private Claims extractAllClaims(String token){
 
-        return Jwts.parserBuilder()
-
-                .setSigningKey(getSigningKey())
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
@@ -106,9 +107,9 @@ public class JwtService {
 
     }
 
-    //make sure our JWT wont change through the way  :
+    //make sure our JWT won't change through the way  :
 
-    private Key getSigningKey() {
+    public SecretKey getSigningKey() {
 
 
         byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);

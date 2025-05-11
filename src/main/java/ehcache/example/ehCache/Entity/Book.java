@@ -24,8 +24,9 @@ public class Book implements Serializable{
 
 
         @ManyToOne
-        @JoinColumn(name="admin_id")
-        private Admin admin;
+        @JoinColumn(name="user_id")
+
+        private User user;
 
 
 

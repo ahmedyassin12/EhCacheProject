@@ -3,29 +3,38 @@ package ehcache.example.ehCache.Service;
 
 import ehcache.example.ehCache.Dao.Bookdao;
 
+import ehcache.example.ehCache.Dao.UserDao;
+import ehcache.example.ehCache.Dto.BookDto;
+import ehcache.example.ehCache.Dto.CreateBookDto;
 import ehcache.example.ehCache.Entity.Book;
+import ehcache.example.ehCache.Entity.User;
+import ehcache.example.ehCache.mapper.BookMapper;
+import ehcache.example.ehCache.validator.ObjectValidator;
+
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.Key;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Transactional  // Default for all methods
-
 public class BookService {
+
     @Autowired
     private Bookdao bookRepository;
-    @Autowired
-    private Bookdao bookdao;
 
+    @Autowired
+    private UserDao userDao;
+
+    @Autowired
+    private  ObjectValidator< CreateBookDto> Bookvalidator ;
 
     public void InitBook(){
 
@@ -43,51 +52,81 @@ public class BookService {
 
     }
 
-    public Book addBook(Book book) {
-        bookRepository.save(book);
-        return book;
+    @CacheEvict(cacheNames = "AllbookDtos", key = "1L")
+    public BookDto addBook(CreateBookDto createBookDto) {
+
+       Bookvalidator.validate(createBookDto) ;
+
+
+        User user = userDao.findById(createBookDto.getUser_Id()).orElseThrow(() -> new EntityNotFoundException("User not found for username: ") ) ;
+
+        Book book = BookMapper.returnBook(createBookDto, user);
+         bookRepository.save(book);
+
+         return BookMapper.returnBookDto(book);
+
     }
 
-      @CachePut(cacheNames = "books",key = "#book.id")
-    public Book updateBook(Book book) {
-        bookRepository.save(book);
-        return book;
+
+
+    @CacheEvict(cacheNames = "AllbookDtos", key = "1L")
+    @CachePut(cacheNames = "bookDtos",key = "#id")
+    public BookDto updateBookById(CreateBookDto createBookDto,Long id) {
+
+        Bookvalidator.validate(createBookDto) ;
+
+        Book findBook=bookRepository.findById(id).orElseThrow(() ->new EntityNotFoundException(("Book not found for id : "+id) ) ) ;
+
+        Book updatedBook = BookMapper.returnBook(createBookDto,findBook.getUser()) ;
+            updatedBook.setId(findBook.getId());
+
+        Book saved_Book= bookRepository.save(updatedBook);
+
+        return BookMapper.returnBookDto(saved_Book);
+
+
     }
 
-    public Book updateBookById(Book book,Long id) {
-        Optional<Book> savedBook=bookRepository.findById(id);
-        bookRepository.save(savedBook.get());
-        return savedBook.get();
+
+    @Transactional(readOnly = true)  // Override for reads
+    @Cacheable(cacheNames = "bookDtos",key = "#id")
+    public BookDto getBook(long id) {
+
+        System.out.println("fetching from db");
+
+        Book book=bookRepository.findById(id).orElseThrow(() ->new EntityNotFoundException(("Book not found for id : "+id) ) ) ;
+
+        return BookMapper.returnBookDto(book);
+
     }
 
     @Transactional(readOnly = true)  // Override for reads
-    @Cacheable(cacheNames = "books",key = "#id")
-    public Book getBook(long id) {
+    @Cacheable(cacheNames = "AllbookDtos", key="1L")
+    public List<BookDto> getAllBooks(){
 
-        System.out.println("fetching from DB");
+        System.out.println("fetching from db");
 
-        return  bookRepository.findById(id).orElseThrow();
+        Iterable<Book> books=bookRepository.findAll();
 
-    }
 
-    @Transactional(readOnly = true)  // Override for reads
-    @Cacheable(cacheNames = "Allbooks", key="1L")
-    public List<Book> getAllBooks(){
-        Iterable<Book> books=bookdao.findAll();
+        List<BookDto>bookDtos =new ArrayList<>( );
+        books.forEach(book ->bookDtos.add(BookMapper.returnBookDto( book  ) )  ) ;
 
-        List<Book>bookList=new ArrayList<>();
 
-        books.forEach(book -> bookList.add(book));
-
-        return bookList ;
-
+        return bookDtos ;
 
     }
 
 
 
-    @CacheEvict(cacheNames = "books",key = "#id")
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "AllbookDtos", key = "1L"),
+            @CacheEvict(cacheNames = "bookDtos", key = "#id")
+    })
     public String deleteBook(long id) {
+        if (!bookRepository.existsById(id)) {
+            throw new EntityNotFoundException("Book with ID " + id + " not found");
+        }
 
         bookRepository.deleteById(id);
         return "Book deleted";

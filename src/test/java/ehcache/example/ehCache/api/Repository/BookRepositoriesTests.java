@@ -21,7 +21,7 @@ public class BookRepositoriesTests {
 
 
     @Autowired
-    private Bookdao bookdao ;
+    private Bookdao bookRepository;
 
 
     @Test
@@ -38,7 +38,7 @@ public class BookRepositoriesTests {
 
         //Act
 
-       Book savedBook= bookdao.save(book) ;
+       Book savedBook= bookRepository.save(book) ;
 
 
         //Assert
@@ -70,10 +70,10 @@ public class BookRepositoriesTests {
 
         //Act
 
-        bookdao.save(book1);
-        bookdao.save(book2);
+        bookRepository.save(book1);
+        bookRepository.save(book2);
 
-        Iterable <Book>books =bookdao.findAll() ;
+        Iterable <Book>books = bookRepository.findAll() ;
 
         List <Book> book_List= StreamSupport.stream(books.spliterator(),false)
                 .collect(Collectors.toList());
@@ -106,11 +106,11 @@ public class BookRepositoriesTests {
         Book book1=Book.builder().id(1).author("king").name("hhh")
                 .category("kids").edition("idk").publisher("3altek")
                 .build();
-        bookdao.save(book1);
+        bookRepository.save(book1);
 
         //Act
 
-        Optional<Book> find_book=bookdao.findById(book1.getId()) ;
+        Optional<Book> find_book= bookRepository.findById(book1.getId()) ;
 
 
 
@@ -130,11 +130,11 @@ public class BookRepositoriesTests {
         Book book1=Book.builder().id(1).author("king").name("hhh")
                 .category("kids").edition("idk").publisher("tek")
                 .build();
-        bookdao.save(book1);
+        bookRepository.save(book1);
 
         //Act
 
-        Optional<Book> find_book=bookdao.findByCategory(book1.getCategory()) ;
+        Optional<Book> find_book= bookRepository.findByCategory(book1.getCategory()) ;
 
 
 
@@ -155,12 +155,12 @@ public class BookRepositoriesTests {
         Book book1=Book.builder().id(1).author("king").name("hhh")
                 .category("kids").edition("idk").publisher("5ek")
                 .build();
-        bookdao.save(book1);
+        bookRepository.save(book1);
 
         //Act
 
         book1.setAuthor("kakouz");
-        Book updated_book=bookdao.save(book1) ;
+        Book updated_book= bookRepository.save(book1) ;
 
 
 
@@ -179,17 +179,17 @@ public class BookRepositoriesTests {
         Book book1=Book.builder().id(1).author("king").name("hhh")
                 .category("kids").edition("idk").publisher("5aek")
                 .build();
-        bookdao.save(book1);
+        bookRepository.save(book1);
 
         //Act
 
-        bookdao.deleteById(book1.getId()); ;
+        bookRepository.deleteById(book1.getId()); ;
 
 
 
         //Assert
 
-        Assertions.assertThat(bookdao.findById(book1.getId())).isEmpty();
+        Assertions.assertThat(bookRepository.findById(book1.getId())).isEmpty();
 
 
     }

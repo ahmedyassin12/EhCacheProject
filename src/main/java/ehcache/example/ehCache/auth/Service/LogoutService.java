@@ -1,4 +1,4 @@
-package ehcache.example.ehCache.JWTconfiguration;
+package ehcache.example.ehCache.auth.Service;
 
 import ehcache.example.ehCache.Dao.TokenDAO;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +24,6 @@ public class LogoutService implements LogoutHandler {
         final String authHeader=request.getHeader("Authorization") ;
         final String jwt  ;
 
-        System.out.println("authHeader = "+authHeader);
 
         if(authHeader==null||!authHeader.startsWith("Bearer ") ){
 
@@ -36,7 +35,6 @@ public class LogoutService implements LogoutHandler {
         var storedToken=tokenDAO.findByToken(jwt)
                 .orElse(null) ;
 
-        System.out.println("storedToken ="+storedToken.getToken());
 
         if(storedToken!=null){
             storedToken.setExpired(true);
