@@ -17,7 +17,9 @@ import io.swagger.v3.oas.annotations.servers.Server;
                         name = "Security",
                         email = "contact@mail.com"
                 ),
-                description = "Backend for Book Management with JWT, Refresh Tokens, Email Verification, etc.",
+                description = "Backend for Book Management with JWT, Refresh Tokens, Email Verification, Ehcache" +
+                        "DTOs , Validators,GlobalExceptionHandling  etc " +
+                        ".",
                 title = "OpenApi specification -",
                 version = "1.0",
                 license = @License(
