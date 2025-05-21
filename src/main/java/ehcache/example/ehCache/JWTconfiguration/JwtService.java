@@ -30,7 +30,7 @@ public class JwtService {
 
     private  final String secretKey="404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
 
-    private final long accessTokenExpiration= 60000 ;   // 86400000; //1 day in ms
+    private final long accessTokenExpiration= 120000 ;   // 86400000; //1 day in ms
 
     private final   long refreshTokenExpiration=604800000;//7 days in ms
 

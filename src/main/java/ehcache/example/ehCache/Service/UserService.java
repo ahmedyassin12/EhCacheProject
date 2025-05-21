@@ -1,6 +1,7 @@
 package ehcache.example.ehCache.Service;
 
 import ehcache.example.ehCache.Dao.Bookdao;
+import ehcache.example.ehCache.Dao.TokenDAO;
 import ehcache.example.ehCache.Dao.UserDao;
 import ehcache.example.ehCache.Dto.CreateBookDto;
 import ehcache.example.ehCache.Dto.UserDto;
@@ -10,6 +11,7 @@ import ehcache.example.ehCache.Entity.User;
 import ehcache.example.ehCache.Entity.Role;
 import ehcache.example.ehCache.auth.Dto.ChangePasswordRequest;
 import ehcache.example.ehCache.mapper.UserMapper;
+import ehcache.example.ehCache.token.Token;
 import ehcache.example.ehCache.validator.ObjectValidator;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.cache.CacheManager;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -51,6 +54,11 @@ public class UserService {
 
     @Autowired
     private  ObjectValidator<ChangePasswordRequest> changePasswordRequestvalidator ;
+
+    @Autowired
+    private  TokenDAO tokenDAO ;
+    @Autowired
+    private  CacheManager cacheManager;
 
 
     @Transactional(readOnly = true)  // Override for reads
@@ -150,6 +158,10 @@ public class UserService {
         if (!userDao.existsById(id)) {
             throw new EntityNotFoundException("user with ID " + id + " not found");
         }
+        List<Token> tokens = tokenDAO.findAllValidTokenByUser(id) ;
+
+        tokens.forEach(t->cacheManager.getCache("JwtTokens").remove( t.getToken() ) );
+
         userDao.deleteById(id) ;
 
         return "User removed" ;

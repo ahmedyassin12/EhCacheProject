@@ -31,7 +31,6 @@ public class VerificationEmailController {
         VerificationToken verificationToken = getValidTokenOrThrow(token);
 
 
-
         return "Email verified successfully! 🎉 Now you can login.";
     }
 

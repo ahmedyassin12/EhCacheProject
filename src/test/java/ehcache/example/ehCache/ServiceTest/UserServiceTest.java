@@ -1,6 +1,7 @@
 package ehcache.example.ehCache.ServiceTest;
 
 import ehcache.example.ehCache.Dao.Bookdao;
+import ehcache.example.ehCache.Dao.TokenDAO;
 import ehcache.example.ehCache.Dao.UserDao;
 import ehcache.example.ehCache.Dto.CreateBookDto;
 import ehcache.example.ehCache.Dto.UserDto;
@@ -10,6 +11,8 @@ import ehcache.example.ehCache.Entity.User;
 import ehcache.example.ehCache.Service.UserService;
 import ehcache.example.ehCache.auth.Dto.ChangePasswordRequest;
 import ehcache.example.ehCache.mapper.UserMapper;
+import ehcache.example.ehCache.token.Token;
+import ehcache.example.ehCache.token.TokenType;
 import ehcache.example.ehCache.validator.ObjectValidator;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,6 +26,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import javax.cache.Cache;
+import javax.cache.CacheManager;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -51,6 +56,14 @@ class UserServiceTest {
     @Mock
     private  ObjectValidator<ChangePasswordRequest> changePasswordRequestvalidator ;
 
+    @Mock
+    private TokenDAO tokenDAO;
+
+    @Mock
+    private CacheManager cacheManager;
+
+    @Mock
+    private Cache cache;
     @Mock
     private PasswordEncoder passwordEncoder;
 
@@ -165,11 +178,27 @@ class UserServiceTest {
     void remUser() {
 
 //arrange
-            doNothing().when(userDao).deleteById(user.getId());
+        Token mockToken = Token.builder()
+                .tokenType(TokenType.BEARER)
+                .expired(false)
+                .token("valid")
+                .revoked(false)
+                .user(user)
+                .build();
+
+        when(tokenDAO.findAllValidTokenByUser(user.getId()))
+                .thenReturn(List.of(mockToken)) ;
+        when(cacheManager.getCache("JwtTokens"))
+                .thenReturn(cache);
+        doNothing().when(userDao).deleteById(user.getId());
             when(userDao.existsById(user.getId())).thenReturn(true );
          //act
         String check= userService.remUser(user.getId());
 
+        //assert :
+        verify(tokenDAO, times(1)).findAllValidTokenByUser(user.getId());
+        verify(cacheManager, times(1)).getCache("JwtTokens");
+        verify(cache, times(1)).remove(mockToken.getToken());
         Assertions.assertThat(check).isEqualTo("User removed");
 
 

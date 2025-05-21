@@ -2,6 +2,8 @@ package ehcache.example.ehCache.Entity;
 import ehcache.example.ehCache.Dto.CreateUserDto;
 import ehcache.example.ehCache.CustomeAnnotation.StrongPassword;
 import ehcache.example.ehCache.CustomeAnnotation.UsernameValidator;
+import ehcache.example.ehCache.token.Token;
+import ehcache.example.ehCache.token.VerificationToken;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
@@ -50,6 +52,9 @@ public class User implements UserDetails {
     @Column(name = "reset_token")
     private String resetToken;
 
+    @OneToMany(mappedBy = "user",fetch = FetchType.EAGER,cascade = CascadeType.REMOVE)
+    private List<Token> tokens ;
+
     @NotNull
     @Column(name = "role",nullable = false)
     @Enumerated(EnumType.STRING)
@@ -57,8 +62,11 @@ public class User implements UserDetails {
 
 
 
-    @OneToMany(mappedBy = "user",fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Book> books=new ArrayList<>() ;
+
+    @OneToMany(mappedBy = "user",cascade = CascadeType.REMOVE)
+    private List<VerificationToken> verificationTokens = new ArrayList<>();
 
 
     //Enable Default = false till our User Verified

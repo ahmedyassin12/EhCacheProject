@@ -95,7 +95,9 @@ public class SecurityConfiguration {
                                  .requestMatchers(PUT, "/api/C2/user/**").hasAnyRole(ADMIN.name()
                                          ,SUPER_ADMIN.name())
 
-
+                                   .requestMatchers(PATCH,"/api/C2/user/changePassword" ).hasAnyRole(SUPER_ADMIN.name(),
+                                   ADMIN.name()
+                                   )
 
                  .anyRequest()
                  .authenticated()

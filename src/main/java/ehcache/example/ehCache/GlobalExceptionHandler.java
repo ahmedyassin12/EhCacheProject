@@ -134,8 +134,8 @@ return ResponseEntity
 
 
     }
-    @ExceptionHandler(ExpiredJwtException.class)
-    public ResponseEntity<?>handleException(ExpiredJwtException e){
+    @ExceptionHandler(io.jsonwebtoken.ExpiredJwtException.class)
+    public ResponseEntity<?>handleException(io.jsonwebtoken.ExpiredJwtException e){
 
         return ResponseEntity
                 .badRequest()

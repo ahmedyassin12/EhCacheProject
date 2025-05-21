@@ -69,6 +69,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         Token token = tokenService.getToken(authHeader.substring(7) );
 
+        System.out.println("token token hhhh : " + token.getToken() );
+
         if( token.getTokenType()!=TokenType.BEARER)     {
 
 

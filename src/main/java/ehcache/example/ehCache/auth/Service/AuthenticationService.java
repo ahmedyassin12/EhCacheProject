@@ -42,7 +42,7 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final TokenDAO tokenDAO ;
+
     private final TokenService tokenService;
     private final VerificationTokenRepository verificationTokenRepository;
     private final EmailService emailService ;
@@ -50,7 +50,7 @@ public class AuthenticationService {
     private final ObjectValidator<RegisterRequest> registerRequestvalidator ;
     private final ObjectValidator<EmailRequest> emailRequestvalidator ;
     private final ObjectValidator<AuthenticationRequest> authRequestvalidator ;
-
+    private final TokenDAO tokenDAO ;
     private final CacheManager cacheManager;
 
 
