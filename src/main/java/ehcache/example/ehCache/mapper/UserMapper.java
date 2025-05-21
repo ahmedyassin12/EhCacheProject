@@ -30,25 +30,25 @@ public class UserMapper {
 
 
 
-    //create AdminDto Object with the object Admin
-    public static UserDto returnUserDto(User admin) {
+    //create UserDto Object with the object User
+    public static UserDto returnUserDto(User user) {
         return UserDto.builder()
-                .id(admin.getId())
-                .name(admin.getName())
-                .email(admin.getEmail())
-                .username(admin.getUsername())
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .username(user.getUsername())
                 .build();
 
 
     }
 
-    public static CreateUserDto returnCreateUserDto(User admin) {
+    public static CreateUserDto returnCreateUserDto(User user) {
         return CreateUserDto.builder()
                 .bookIds(Collections.emptyList())
-                .email(admin.getEmail())
-                .name(admin.getName())
-                .password(admin.getPassword())
-                .username(admin.getUsername())
+                .email(user.getEmail())
+                .name(user.getName())
+                .password(user.getPassword())
+                .username(user.getUsername())
                 .build();
 
 

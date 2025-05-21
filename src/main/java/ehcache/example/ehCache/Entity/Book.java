@@ -25,7 +25,6 @@ public class Book implements Serializable{
 
         @ManyToOne
         @JoinColumn(name="user_id")
-
         private User user;
 
 

@@ -8,6 +8,7 @@ import ehcache.example.ehCache.Dto.CreateUserDto;
 import ehcache.example.ehCache.Entity.Book;
 import ehcache.example.ehCache.Entity.User;
 import ehcache.example.ehCache.Entity.Role;
+import ehcache.example.ehCache.auth.Dto.ChangePasswordRequest;
 import ehcache.example.ehCache.mapper.UserMapper;
 import ehcache.example.ehCache.validator.ObjectValidator;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,10 +17,12 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -45,6 +48,10 @@ public class UserService {
 
     @Autowired
     private ObjectValidator<UserDto> UserDtovalidator ;
+
+    @Autowired
+    private  ObjectValidator<ChangePasswordRequest> changePasswordRequestvalidator ;
+
 
     @Transactional(readOnly = true)  // Override for reads
     @Cacheable(cacheNames ="AlluserDtos", key ="2L")
@@ -151,24 +158,54 @@ public class UserService {
 
 
 
+    public void changePassword(ChangePasswordRequest request, Principal connectedUser) {
+
+
+        changePasswordRequestvalidator.validate(request);
+
+        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal() ;
+
+
+        //check if current pass is correct :
+        if( !passwordEncoder.matches(request.getCurrentPassword(),user.getPassword() ) ){
+
+            throw new IllegalArgumentException("wrong password") ;
+
+        }
+
+
+        //check if password are the same :
+        if (! request.getConfirmationPassword().equals(request.getNewPassword()))
+            throw new IllegalArgumentException("password are not the same") ;
+
+
+        //update password
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+
+        //save pass
+        userDao.save(user) ;
+
+
+    }
 
 
     //this updates only name and username
     @CacheEvict(cacheNames = "AlluserDtos", key = "2L")
-    @CachePut(cacheNames = "userDtos",key = "#id")
-    public UserDto updateUser(Long id , UserDto userDto) {
+    @CachePut(cacheNames = "userDtos", key = "#userDto.getId()")
+    public UserDto updateUser( UserDto userDto) {
 
-        UserDtovalidator.validate(userDto) ;
+        UserDtovalidator.validate(userDto);
 
-        User user= userDao.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found for id: " + id));
+        User user = userDao.findById(userDto.getId()).orElseThrow(() -> new EntityNotFoundException("User not found for id: " + userDto.getId()));
 
 
         user.setName(userDto.getName());
         user.setEmail(userDto.getEmail());
 
-         userDao.save(user);
 
-         return UserMapper.returnUserDto(user) ;
+        userDao.save(user);
+
+        return UserMapper.returnUserDto(user);
 
     }
 

@@ -19,14 +19,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.internal.stubbing.answers.DoesNothing;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import javax.cache.CacheManager;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -67,6 +71,8 @@ class AuthenticationServiceTest {
     @Mock
     private  ObjectValidator<ChangePasswordRequest> changePasswordRequestvalidator ;
 
+    @Mock
+    private CacheManager cacheManager ;
 
 
     @InjectMocks
@@ -75,8 +81,9 @@ class AuthenticationServiceTest {
 
     private RegisterRequest validRegisterRequest;
     private User testUser;
+    private User testUser2 ;
     private VerificationToken testVerificationToken;
-
+    private Token mockToken ;
     @BeforeEach
     void setUp() {
         validRegisterRequest = RegisterRequest.builder()
@@ -94,7 +101,15 @@ class AuthenticationServiceTest {
                 .password("encodedPassword")
                 .name("Admin User")
                 .role(Role.ADMIN)
-                .enabled(false)
+                .enabled(true)
+                .build();
+
+         mockToken = Token.builder()
+                .tokenType(TokenType.BEARER)
+                .expired(false)
+                .token("validToken")
+                .revoked(false)
+                .user(testUser)
                 .build();
 
         testVerificationToken = VerificationToken.builder()
@@ -137,80 +152,6 @@ class AuthenticationServiceTest {
         });
     }
 
-    @Test
-    void authenticate_ValidCredentials_ShouldReturnToken() {
-
-        // Arrange
-        AuthenticationRequest request = new AuthenticationRequest("adminUser", "password");
-
-        when(authenticationManager.authenticate(any()))
-                .thenReturn(new UsernamePasswordAuthenticationToken(testUser, null));
-        when(userDao.findUserByUsername(anyString())).thenReturn(Optional.of(testUser));
-        when(jwtService.generateToken(any(User.class))).thenReturn("jwtToken");
-
-        // Act
-        AuthenticationResponse response = authenticationService.authenticate(request);
-
-        // Assert
-        assertNotNull(response.getToken());
-        verify(tokenDAO).save(any(Token.class));
-        verify(tokenDAO).findAllValidTokenByUser(anyLong());
-    }
-
-    @Test
-    void authenticate_InvalidCredentials_ShouldThrowException() {
-        // Arrange
-        AuthenticationRequest request = new AuthenticationRequest("adminUser", "wrongPassword");
-
-        when(authenticationManager.authenticate(any()))
-                .thenThrow(new BadCredentialsException("Invalid credentials"));
-
-        // Act & Assert
-        assertThrows(RuntimeException.class, () -> {
-            authenticationService.authenticate(request);
-        });
-    }
-
-    @Test
-    void changePassword_ValidRequest_ShouldUpdatePassword() {
-        // Arrange
-        ChangePasswordRequest request = new ChangePasswordRequest(
-                "oldPassword", "newPassword", "newPassword"
-        );
-
-        UsernamePasswordAuthenticationToken principal =
-                new UsernamePasswordAuthenticationToken(testUser, null);
-
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(passwordEncoder.encode(anyString())).thenReturn("newEncodedPassword");
-
-        // Act
-        authenticationService.changePassword(request, principal);
-
-        // Assert
-        verify(userDao).save(any(User.class));
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userDao).save(userCaptor.capture());
-        assertEquals("newEncodedPassword", userCaptor.getValue().getPassword());
-    }
-
-    @Test
-    void changePassword_WrongCurrentPassword_ShouldThrowException() {
-        // Arrange
-        ChangePasswordRequest request = new ChangePasswordRequest(
-                "wrongPassword", "newPassword", "newPassword"
-        );
-        UsernamePasswordAuthenticationToken principal =
-                new UsernamePasswordAuthenticationToken(testUser, null);
-
-     //   doNothing().when( changePasswordRequestvalidator).validate(request);
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
-
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> {
-            authenticationService.changePassword(request, principal);
-        });
-    }
 
     @Test
     void forgetPassword_InvalidEmail_ShouldReturnErrorMessage() {

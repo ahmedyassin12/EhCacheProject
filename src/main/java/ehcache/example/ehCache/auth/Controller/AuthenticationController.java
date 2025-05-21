@@ -2,12 +2,15 @@ package ehcache.example.ehCache.auth.Controller;
 
 import ehcache.example.ehCache.auth.Dto.*;
 import ehcache.example.ehCache.auth.Service.AuthenticationService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.security.Principal;
 
 @RestController
@@ -43,20 +46,7 @@ return ResponseEntity.ok(service.register(request)) ;
 
     }
 
-    @PatchMapping("/changePassword")
-    public ResponseEntity<?>changePaassword(
-            @RequestBody  ChangePasswordRequest request
-            ,
-            Principal connectedUser
-    )
-    {
 
-
-
-        service.changePassword(request,connectedUser) ;
-        return  ResponseEntity.ok().build() ;
-
-    }
 
 
 
@@ -65,6 +55,16 @@ return ResponseEntity.ok(service.register(request)) ;
 
         service.ForgetPassword(request);
         return ResponseEntity.ok("Reset password email sent. Please check your inbox.");
+
+
+    }
+
+    @PostMapping("/refresh-token")
+    public AuthenticationResponse refreshToken(HttpServletRequest request,
+                                               HttpServletResponse response) throws IOException {
+
+
+       return service.refreshToken(request,response) ;
 
 
     }

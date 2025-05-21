@@ -19,7 +19,7 @@ public class UserDto {
 
     @NotNull
     @NotEmpty
-    private String name ;
+    private String name;
 
     @NotNull
     private Long id;
@@ -29,7 +29,6 @@ public class UserDto {
 
     @UsernameValidator
     private String username;
-
 
 
 

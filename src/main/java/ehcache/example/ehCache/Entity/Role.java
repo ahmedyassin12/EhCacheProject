@@ -15,7 +15,6 @@ public enum Role {
     ADMIN(
             Set.of(  // Explicitly use Set.of() for clarity
                     ADMIN_UPDATE,
-                    ADMIN_DELETE,
                     ADMIN_READ,
 
                     BOOK_CREATE,

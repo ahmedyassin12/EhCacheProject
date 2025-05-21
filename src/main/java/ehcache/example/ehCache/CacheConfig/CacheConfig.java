@@ -2,6 +2,7 @@
 
     import ehcache.example.ehCache.Dto.BookDto;
     import ehcache.example.ehCache.Dto.UserDto;
+    import ehcache.example.ehCache.token.Token;
     import org.ehcache.config.CacheConfiguration;
     import org.ehcache.config.builders.CacheConfigurationBuilder;
     import org.ehcache.config.builders.ResourcePoolsBuilder;
@@ -58,6 +59,14 @@
 
                         ).build();
 
+               CacheConfiguration<String, Token > JwtTokens =
+                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                                String.class , // Key type
+                                Token.class,  // Value type
+                                ResourcePoolsBuilder.heap(1000) // Max entries in heap
+
+                        ).build();
+
                 if (cacheManager.getCache("bookDtos", Long.class, BookDto.class) == null) {
                     cacheManager.createCache("bookDtos", // e to match @Cacheable
                             Eh107Configuration.fromEhcacheCacheConfiguration(Bookconfiguration));
@@ -84,6 +93,12 @@
                     );
                 }
 
+              if (cacheManager.getCache("JwtTokens", String.class, Token.class) == null) {
+
+                    cacheManager.createCache("JwtTokens",
+                            Eh107Configuration.fromEhcacheCacheConfiguration(JwtTokens)
+                    );
+                }
                 return cacheManager;
 
             }

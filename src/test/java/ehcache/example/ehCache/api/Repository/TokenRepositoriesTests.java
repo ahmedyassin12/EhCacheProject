@@ -35,6 +35,7 @@ public class TokenRepositoriesTests {
 
     private  Token token ;
     private  Token token2 ;
+    private  Token token3 ;
 
 
 
@@ -77,7 +78,15 @@ public class TokenRepositoriesTests {
                 .build() ;
         tokenDAO.save(token2) ;
 
-
+//set up 3rd token :
+        token3 = Token.builder()
+                .user(user)
+                .token("fakeJwtToken3-qsdfmlkj")
+                .tokenType(TokenType.REFRESHTOKEN)
+                .revoked(false)
+                .expired(false)
+                .build() ;
+        tokenDAO.save(token3) ;
 
 
 
@@ -115,22 +124,53 @@ public class TokenRepositoriesTests {
         //assert:
 
                     //check if if works fine :
-        Assertions.assertThat(validTokens.size()).isEqualTo(2);
+        Assertions.assertThat(validTokens.size()).isEqualTo(3);
         Assertions.assertThat(validTokens.get(0).getToken().equals(token.getToken()) );
 
                     //check if expired works
         token.setExpired(true);
+        token2.setExpired(true);
         validTokens=tokenDAO.findAllValidTokenByUser(user.getId()) ;
         Assertions.assertThat(validTokens.size()).isEqualTo(1);
-        Assertions.assertThat(validTokens.get(0).getToken().equals(token2.getToken()) );
+        Assertions.assertThat(validTokens.get(0).getToken().equals(token3.getToken()) );
 
                     //check if revoked works :
-        token2.setRevoked(true);
+        token3.setRevoked(true);
         validTokens=tokenDAO.findAllValidTokenByUser(user.getId()) ;
         Assertions.assertThat(validTokens.size()).isEqualTo(0);
 
 
     }
+
+    @Test
+    public void TokenDao_findAllValidBearerTokenByUser_returnsValidTokens(){
+
+
+        //only 2 token that i set up are bearer which are token and token 2 objects
+        //act
+        List<Token> validTokens=tokenDAO.findAllValidBearerTokenByUser(user.getId()) ;
+
+        //assert:
+
+        //check if if works fine :
+        Assertions.assertThat(validTokens.size()).isEqualTo(2);
+        Assertions.assertThat(validTokens.get(0).getToken().equals(token.getToken()) );
+
+        //check if expired works
+        token.setExpired(true);
+        validTokens=tokenDAO.findAllValidBearerTokenByUser(user.getId()) ;
+        Assertions.assertThat(validTokens.size()).isEqualTo(1);
+        Assertions.assertThat(validTokens.get(0).getToken().equals(token2.getToken()) );
+
+        //check if revoked works :
+        token2.setRevoked(true);
+        validTokens=tokenDAO.findAllValidBearerTokenByUser(user.getId()) ;
+        Assertions.assertThat(validTokens.size()).isEqualTo(0);
+
+
+    }
+
+
 
 
 }

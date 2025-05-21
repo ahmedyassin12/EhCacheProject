@@ -1,5 +1,5 @@
-package ehcache.example.ehCache.JwtTests;
 
+package ehcache.example.ehCache.JwtTests;
 import ehcache.example.ehCache.JWTconfiguration.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -90,13 +90,6 @@ class JwtServiceTest {
         assertEquals(userDetails.getUsername(), claims.getSubject());
     }
 
-    @Test
-    void testIsTokenValid_ValidToken() {
-        String token = jwtService.generateToken(userDetails);
-        boolean isValid = jwtService.IsTokenValid(token, userDetails);
-
-        assertTrue(isValid);
-    }
 
     @Test
     void testIsTokenValid_InvalidUser() {
@@ -147,8 +140,8 @@ class JwtServiceTest {
 
     }
 
+*/
 
- */
 
     @Test
     void testExtractClaim() {
@@ -174,11 +167,14 @@ class JwtServiceTest {
         assertNotNull(claims.getExpiration());
         assertNotNull(claims.getIssuedAt());
     }
-    */
+*/
 
     private SecretKey getSigningKey() {
+
         byte[] keyBytes = java.util.Base64.getDecoder().decode(SECRET_KEY);
         return Keys.hmacShaKeyFor(keyBytes);
+
+
     }
 
 

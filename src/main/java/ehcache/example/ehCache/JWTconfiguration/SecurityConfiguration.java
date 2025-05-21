@@ -14,7 +14,10 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 
+import javax.sound.midi.Patch;
+
 import static ehcache.example.ehCache.Entity.Role.ADMIN;
+import static ehcache.example.ehCache.Entity.Role.SUPER_ADMIN;
 import static org.springframework.http.HttpMethod.*;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
@@ -25,15 +28,13 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 public class SecurityConfiguration {
 
 
-    @Autowired
+
     private final JwtAuthenticationFilter jwtAuthFilter;
 
 
-    @Autowired
     private final AuthenticationProvider authenticationProvider;
 
 
-   @Autowired
     private final LogoutHandler logoutHandler ;
 
 
@@ -47,7 +48,7 @@ public class SecurityConfiguration {
             "/configuration/security",
             "/swagger-ui/**",
             "/webjars/**",
-            "/swagger-ui.html","/api/v1/**","/api/v1/auth/verify?token/**"    } ;
+            "/swagger-ui.html","/api/v1/**"    } ;
 
     @Bean
     public SecurityFilterChain securityFilterChain (HttpSecurity http ) throws Exception {
@@ -60,7 +61,7 @@ public class SecurityConfiguration {
             .authorizeHttpRequests(req->
 
 
-                         req.requestMatchers (
+                           req.requestMatchers (
                                  WHITE_LIST_URL
 
                                          )
@@ -71,15 +72,28 @@ public class SecurityConfiguration {
 
 
 
-                                 .requestMatchers(GET,"/api/C1/Book/**").hasRole(ADMIN.name())
-                                 .requestMatchers(POST,"/api/C1/Book/**").hasRole(ADMIN.name())
-                                 .requestMatchers(DELETE,"/api/C1/Book/**").hasRole(ADMIN.name())
-                                 .requestMatchers(PUT,"/api/C1/Book/**").hasRole(ADMIN.name())
+                                 .requestMatchers(GET,"/api/C1/Book/**").hasAnyRole(ADMIN.name(),
+                                         SUPER_ADMIN.name())
 
-                                 .requestMatchers(GET, "/api/C2/user/**").hasRole(ADMIN.name())
-                                 .requestMatchers(POST, "/api/C2/user/**").hasRole(ADMIN.name())
-                                 .requestMatchers(DELETE, "/api/C2/user/**").hasRole(ADMIN.name())
-                                 .requestMatchers(PUT, "/api/C2/user/**").hasRole(ADMIN.name())
+                                 .requestMatchers(POST,"/api/C1/Book/**").hasAnyRole(ADMIN.name(),
+                                         SUPER_ADMIN.name())
+
+                                 .requestMatchers(DELETE,"/api/C1/Book/**").hasAnyRole(ADMIN.name(),
+                                         SUPER_ADMIN.name())
+
+                                 .requestMatchers(PUT,"/api/C1/Book/**").hasAnyRole(ADMIN.name(),
+                                         SUPER_ADMIN.name())
+
+
+                                 .requestMatchers(GET, "/api/C2/user/**").hasAnyRole(ADMIN.name(),
+                                         SUPER_ADMIN.name())
+
+                                 .requestMatchers(POST, "/api/C2/user/**").hasRole(SUPER_ADMIN.name())
+
+                                 .requestMatchers(DELETE, "/api/C2/user/**").hasRole(SUPER_ADMIN.name())
+
+                                 .requestMatchers(PUT, "/api/C2/user/**").hasAnyRole(ADMIN.name()
+                                         ,SUPER_ADMIN.name())
 
 
 

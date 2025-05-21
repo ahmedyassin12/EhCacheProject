@@ -78,15 +78,7 @@ public class UserControllerTest {
 
     }
 
-   /* @Test
-    void createUser_InvalidInput_ReturnsBadRequest() throws Exception {
-        CreateUserDto invalidDto = new CreateUserDto(); // Missing required fields
 
-        mockMvc.perform(post(BASE_URL + "/createNewUser")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidDto)))
-                .andExpect(status().());
-    }*/
 
     @Test
     void getUserById_ValidId_ReturnsUser() throws Exception {
@@ -123,16 +115,16 @@ public class UserControllerTest {
                 .username("darkyiwnl123")
                 .build();
 
-        when(userService.updateUser(anyLong(), any(UserDto.class))).thenReturn(updatedDto);
+        when(userService.updateUser(any(UserDto.class))).thenReturn(updatedDto);
 
-        mockMvc.perform(put(BASE_URL + "/updateUser/{id}", 1L)
+        mockMvc.perform(put(BASE_URL + "/updateUser")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updatedDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("John Updated"));
 
         ArgumentCaptor<UserDto> dtoCaptor = ArgumentCaptor.forClass(UserDto.class);
-        verify(userService).updateUser(eq(1L), dtoCaptor.capture());
+        verify(userService).updateUser( dtoCaptor.capture());
         assertThat(dtoCaptor.getValue().getName()).isEqualTo("John Updated");
     }
 
@@ -140,7 +132,7 @@ public class UserControllerTest {
     void deleteUser_ValidId_ReturnsConfirmation() throws Exception {
         when(userService.remUser(anyLong())).thenReturn("User deleted");
 
-        mockMvc.perform(delete(BASE_URL + "//remUser/{id}", 1L))
+        mockMvc.perform(delete(BASE_URL + "/remUser/{id}", 1L))
                 .andExpect(status().isOk())
                 .andExpect(content().string("user removed"));
     }

@@ -8,24 +8,31 @@ import ehcache.example.ehCache.Dto.CreateUserDto;
 import ehcache.example.ehCache.Entity.Role;
 import ehcache.example.ehCache.Entity.User;
 import ehcache.example.ehCache.Service.UserService;
+import ehcache.example.ehCache.auth.Dto.ChangePasswordRequest;
 import ehcache.example.ehCache.mapper.UserMapper;
 import ehcache.example.ehCache.validator.ObjectValidator;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -40,6 +47,12 @@ class UserServiceTest {
     private ObjectValidator<UserDto> UserDtoValidator;
     @Mock
     private ObjectValidator<CreateUserDto> CreateUserDtoValidator;
+
+    @Mock
+    private  ObjectValidator<ChangePasswordRequest> changePasswordRequestvalidator ;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserService userService;
@@ -176,6 +189,7 @@ class UserServiceTest {
         UserDto updateDto = UserDto.builder()
                 .name("New Name")
                 .email("newUsername")
+                .id(1L)
                 .build();
 
             when(userDao.findById(1l)).thenReturn(Optional.ofNullable(user));
@@ -185,7 +199,7 @@ class UserServiceTest {
 
 
 //act
-        UserDto result = userService.updateUser(1l,updateDto) ;
+        UserDto result = userService.updateUser(updateDto) ;
 
 
         //assert
@@ -197,6 +211,46 @@ class UserServiceTest {
 
     }
 
+    @Test
+    void changePassword_ValidRequest_ShouldUpdatePassword() {
+        // Arrange
+        ChangePasswordRequest request = new ChangePasswordRequest(
+                "mqldsjkfml", "newPassword", "newPassword"
+        );
+
+        UsernamePasswordAuthenticationToken principal =
+                new UsernamePasswordAuthenticationToken(user, null);
+
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(passwordEncoder.encode(anyString())).thenReturn("newEncodedPassword");
+
+        // Act
+        userService.changePassword(request, principal);
+
+        // Assert
+        verify(userDao).save(any(User.class));
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userDao).save(userCaptor.capture());
+        assertEquals("newEncodedPassword", userCaptor.getValue().getPassword());
+    }
+
+    @Test
+    void changePassword_WrongCurrentPassword_ShouldThrowException() {
+        // Arrange
+        ChangePasswordRequest request = new ChangePasswordRequest(
+                "wrongPassword", "newPassword", "newPassword"
+        );
+        UsernamePasswordAuthenticationToken principal =
+                new UsernamePasswordAuthenticationToken(user, null);
+
+        //   doNothing().when( changePasswordRequestvalidator).validate(request);
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            userService.changePassword(request, principal);
+        });
+    }
 
 
 }

@@ -34,8 +34,6 @@ public class BookControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-//    @MockBean
-//    private BookService bookService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -94,22 +92,7 @@ public class BookControllerTest {
     }
 
 
-   /* @Test
-    public void BookController_addBook_ReturnsValidationError() throws Exception {
-        // Missing "category" field
-        CreateBookDto invalidBook = CreateBookDto.builder()
-                .name("Book One")
-                .author("Author A")
-                .publisher("Publisher X")
-                .user_Id(1L)
-                .build();
 
-        mockMvc.perform(post(BASE_URL + "/addbook")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidBook)))
-                .andExpect(status().isBadRequest());// Expect 400
-
-    }*/
 
 
     @Test

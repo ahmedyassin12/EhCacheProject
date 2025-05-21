@@ -1,12 +1,14 @@
 package ehcache.example.ehCache.ServiceTest.CachingTest;
 
 import ehcache.example.ehCache.Dao.Bookdao;
+import ehcache.example.ehCache.Dao.TokenDAO;
 import ehcache.example.ehCache.Dao.UserDao;
 import ehcache.example.ehCache.Dto.UserDto;
 import ehcache.example.ehCache.Entity.Role;
 import ehcache.example.ehCache.Entity.User;
 import ehcache.example.ehCache.Service.UserService;
 import ehcache.example.ehCache.mapper.UserMapper;
+import jakarta.transaction.Transactional;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,11 +17,13 @@ import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import javax.cache.CacheManager;
+import java.util.Collections;
 import java.util.List;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @SpringBootTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
+@Transactional
 public class UserCachingTests {
 
     @Autowired
@@ -36,10 +40,14 @@ public class UserCachingTests {
     @Autowired
     private Bookdao bookdao;
 
+    @Autowired
+    private TokenDAO tokenDAO;
+
     @BeforeEach
     void setUp() {
         bookdao.deleteAll();
        userDao.deleteAll();
+       tokenDAO.deleteAll();
        //bookD
         user = User.builder()
                 .role(Role.ADMIN)
@@ -47,6 +55,7 @@ public class UserCachingTests {
                 .username("userKing")
                 .name("Test User")
                 .email("user@example.com")
+                .books(Collections.emptyList())
                 .build();
         userDao.save(user );
         userId = user.getId();
@@ -56,11 +65,13 @@ public class UserCachingTests {
         cacheManager.getCache("AlluserDtos").clear();
     }
 
+
     @Test
     public void UserService_getAllUsersCache_ReturnsAllUsersDto() throws Exception {
         // Add second user
         User user2 = User.builder()
                 .password("AnotherSecureP@ss123P@ss")
+                .role(Role.ADMIN)
                 .username("secondUser")
                 .name("Second User")
                 .email("user2@example.com")
@@ -80,6 +91,7 @@ public class UserCachingTests {
                 .username("thirdUser")
                 .name("Third User")
                 .email("user3@example.com")
+                .role(Role.ADMIN)
                 .build();
         userService.createNewUser(UserMapper.returnCreateUserDto(user3));
 
@@ -115,7 +127,7 @@ public class UserCachingTests {
         // Update user
         initialDto.setName("Updated Name");
         initialDto.setEmail("updated@example.com");
-        UserDto updatedDto = userService.updateUser(userId, initialDto);
+        UserDto updatedDto = userService.updateUser( initialDto);
 
         // Verify updated cache
         UserDto updatedCache = (UserDto) cacheManager.getCache("userDtos").get(userId);
@@ -157,6 +169,9 @@ public class UserCachingTests {
 
     }
 
+
+
+
    @Test
     public void UserService_DeleteUserCache_returnNull() {
         // Prime cache
@@ -179,4 +194,7 @@ public class UserCachingTests {
         Assertions.assertThat(actual.getName()).isEqualTo(expected.getName());
         Assertions.assertThat(actual.getEmail()).isEqualTo(expected.getEmail());
     }
+
+
+
 }

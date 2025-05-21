@@ -1,22 +1,24 @@
 package ehcache.example.ehCache.auth.Service;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ehcache.example.ehCache.Dao.UserDao;
 import ehcache.example.ehCache.Dao.TokenDAO;
 import ehcache.example.ehCache.Dao.VerificationTokenRepository;
-import ehcache.example.ehCache.Dto.UserDto;
 import ehcache.example.ehCache.Entity.Role;
 import ehcache.example.ehCache.Entity.User;
 import ehcache.example.ehCache.JWTconfiguration.JwtService;
+import ehcache.example.ehCache.Service.TokenService;
 import ehcache.example.ehCache.auth.Dto.*;
 import ehcache.example.ehCache.token.Token;
 import ehcache.example.ehCache.token.TokenType;
 import ehcache.example.ehCache.token.VerificationToken;
 import ehcache.example.ehCache.validator.ObjectValidator;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,8 +26,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.security.Principal;
+import javax.cache.CacheManager;
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -33,19 +37,21 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthenticationService {
 
+    //private final AuthenticationService self ;
     private final UserDao repository ;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final TokenDAO tokenDAO ;
+    private final TokenService tokenService;
     private final VerificationTokenRepository verificationTokenRepository;
     private final EmailService emailService ;
 
     private final ObjectValidator<RegisterRequest> registerRequestvalidator ;
     private final ObjectValidator<EmailRequest> emailRequestvalidator ;
     private final ObjectValidator<AuthenticationRequest> authRequestvalidator ;
-    private final ObjectValidator<ChangePasswordRequest> changePasswordRequestvalidator ;
 
+    private final CacheManager cacheManager;
 
 
     public String register(RegisterRequest request) {
@@ -147,6 +153,7 @@ return token;
 }
 
 //qqqqqqqqqqqqqqqqqqqqqq
+    @Transactional
     public AuthenticationResponse authenticate(AuthenticationRequest request) throws BadCredentialsException {
 
         authRequestvalidator.validate(request);
@@ -166,81 +173,125 @@ return token;
         }
 
 
+
+
         var user = repository.findUserByUsername(request.getUsername()).orElseThrow(() ->
                 new UsernameNotFoundException("User not found with username : " + request.getUsername())
         );
 
         var jwtToken = jwtService.generateToken(user);
+        var refreshToken=jwtService.generateRefreshToken(user);
 
-        revokeAllUserTokens(user);
+        //Evict my cache  manually
+        List<Token> tokens = tokenDAO.findAllValidTokenByUser(user.getId()) ;
 
-        saveUserToken(user,jwtToken);
-        
+        tokens.forEach(t->cacheManager.getCache("JwtTokens").remove( t.getToken() ) );
+
+        tokenDAO.revokeAllTokensByUser(user.getId());
+
+        saveUserToken(user,jwtToken,TokenType.BEARER);
+        saveUserToken(user,refreshToken,TokenType.REFRESHTOKEN);
+
         return AuthenticationResponse.builder()
-                .token(jwtToken)
+                .accessToken(jwtToken)
+                .refreshToken(refreshToken)
                 .build();
 
     }
 
-    private void saveUserToken(User user, String jwtToken) {
+    private void saveUserToken(User user, String jwtToken,TokenType tokenType) {
         var token = Token.builder()
                 .user(user)
                 .token(jwtToken)
-                .tokenType(TokenType.BEARER)
+                .tokenType(tokenType)
                 .revoked(false)
                 .expired(false)
                 .build() ;
         tokenDAO.save(token) ;
     }
 
-    private void revokeAllUserTokens(User user){
 
 
-        var validUserTokens = tokenDAO.findAllValidTokenByUser(user.getId()) ;
-        if(validUserTokens.isEmpty()) return;
-
-        validUserTokens.forEach(t->{
-
-            t.setExpired(true);
-
-            t.setRevoked(true);
 
 
-        });
-
-        tokenDAO.saveAll(validUserTokens);
-
-    }
 
     //aaaaaaaaaaaaaaaaaaaaaa
-    public void changePassword(ChangePasswordRequest request, Principal connectedUser) {
 
 
-        changePasswordRequestvalidator.validate(request);
 
-        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal() ;
+        @Transactional
+        public AuthenticationResponse refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
 
-        //check if current pass is correct :
-        if( !passwordEncoder.matches(request.getCurrentPassword(),user.getPassword() ) ){
 
-            throw new IllegalArgumentException("wrong password") ;
+            final String authHeader = request.getHeader("Authorization");
+            final String refreshToken;
+            final String Username;
 
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+                //Skip JWT logic and pass the request down the chain.
+
+                return null;
+            }
+
+            refreshToken = authHeader.substring(7);
+
+            Username = jwtService.extractUserName(refreshToken);
+
+
+            if (Username != null ) {
+
+                var user = this.repository.findUserByUsername(Username).orElseThrow();
+
+              Token checkToken=  tokenService.getToken(refreshToken);
+
+
+                boolean isTokenValid ;
+
+                if( ! checkToken.isRevoked()) {
+
+                    isTokenValid=true ;
+
+                }
+                else{
+                    isTokenValid=false;
+                }
+
+
+                if (jwtService.IsTokenValid(refreshToken, user)
+                        && isTokenValid
+                    ) {
+
+                    var accessToken=jwtService.generateToken(user) ;
+
+
+                    tokenDAO.revokeBearerTokensByUser(user.getId());
+
+                    List<Token> tokens = tokenDAO.findAllValidBearerTokenByUser(user.getId()) ;
+
+                    tokens.forEach(t-> cacheManager.getCache("JwtTokens").remove( t.getToken() ) );
+
+                    saveUserToken(user,accessToken,TokenType.BEARER);
+
+                   var  authResponse= AuthenticationResponse.builder()
+                            .accessToken(accessToken)
+                            .refreshToken(refreshToken)
+                            .build();
+
+                    return  authResponse ;
+                }
+
+
+            }
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED) ;
+            return  null;
         }
 
 
-        //check if password are the same :
-        if (! request.getConfirmationPassword().equals(request.getNewPassword()))
-            throw new IllegalArgumentException("password are not the same") ;
 
-
-        //update password
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-
-        //save pass
-        repository.save(user) ;
-
-
-    }
 
 }

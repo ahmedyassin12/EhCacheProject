@@ -10,6 +10,13 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 @Entity
+@Table(indexes = {
+        @Index(name = "idx_token_value", columnList = "token"),
+        @Index(name = "idx_token_user_valid", columnList = "User_id,expired,revoked")
+})
+
+
+
 public class Token {
 
 
@@ -31,6 +38,8 @@ public class Token {
     @ManyToOne
     @JoinColumn(name="User_id")
     private User user;
+
+
 
 
     }

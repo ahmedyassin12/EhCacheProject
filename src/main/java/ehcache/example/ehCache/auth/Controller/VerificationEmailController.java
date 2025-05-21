@@ -27,6 +27,7 @@ public class VerificationEmailController {
 
     @GetMapping("/verify")
     public String verifyEmail(@RequestParam("token") String token) {
+
         VerificationToken verificationToken = getValidTokenOrThrow(token);
 
 
@@ -38,7 +39,7 @@ public class VerificationEmailController {
     public ResponseEntity<String> validateResetToken(@RequestParam("token") String token) {
         getValidTokenOrThrow(token);
 
-        return ResponseEntity.ok("Token valid. You can now set a new password.");
+        return ResponseEntity.ok(token);
     }
 
 
@@ -47,6 +48,7 @@ public class VerificationEmailController {
                 .orElseThrow(() -> new RuntimeException("Invalid token."));
 
         if (verificationToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+
             throw new RuntimeException("Token expired.");
         }
         var user = verificationToken.getUser();
