@@ -36,7 +36,9 @@ A secure and performant Spring Boot application for managing books. Features inc
 
 ## 📦 Run with Docker
 
-###1. 1. Build the Application 
+###1. 1.docker-compose up -d : starts ur containers first ...
+
+2. Build the Application 
 ./gradlew clean build : This will generate the .jar file in build/libs/.
 
 ### 2. Build the Docker Image
@@ -86,8 +88,12 @@ Validation Layer – Uses javax.validation + custom validators
 -Swagger for exploring & testing endpoints
 
 📬 Author
-Ahmed Yassin (Trao360)
+👤  Ahmed Yassin (Trao360)  ⚙️ Backend Developer | BI Enthusiast
+
+
 📧 Reach out or open an issue to collaborate.
 ⭐ Star the repo if you like it!
+📝 License This project is licensed under the MIT License.
+
 
 
