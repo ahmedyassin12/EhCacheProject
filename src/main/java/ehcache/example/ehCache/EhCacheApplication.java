@@ -30,6 +30,36 @@ public class EhCacheApplication  {//implements CommandLineRunner
 
 
 	}
+	@Bean
+	public CorsFilter corsFilter() {
+		CorsConfiguration corsConfiguration = new CorsConfiguration();
+		corsConfiguration.setAllowCredentials(true);
+
+		// ✅ ALLOW localhost (add Render domain in deployment)
+		corsConfiguration.setAllowedOrigins(Arrays.asList(
+				"http://localhost:9099",
+				"https://your-app-name.onrender.com" // Add your Render domain here
+		));
+
+		// ✅ Minimal but sufficient allowed headers
+		corsConfiguration.setAllowedHeaders(Arrays.asList(
+				"Origin", "Content-Type", "Accept", "Authorization"
+		));
+
+		// ✅ Expose only headers that client needs
+		corsConfiguration.setExposedHeaders(Arrays.asList(
+				"Authorization", "Content-Type"
+		));
+
+		// ✅ Common HTTP methods
+		corsConfiguration.setAllowedMethods(Arrays.asList(
+				"GET", "POST", "PUT", "DELETE", "OPTIONS"
+		));
+
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", corsConfiguration);
+		return new CorsFilter(source);
+	}
 
 
 

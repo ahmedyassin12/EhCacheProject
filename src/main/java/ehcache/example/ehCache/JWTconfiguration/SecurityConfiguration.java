@@ -70,8 +70,6 @@ public class SecurityConfiguration {
 
                                  //our Secured EndPoint
 
-
-
                                  .requestMatchers(GET,"/api/C1/Book/**").hasAnyRole(ADMIN.name(),
                                          SUPER_ADMIN.name())
 
