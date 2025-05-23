@@ -38,7 +38,7 @@ public class EhCacheApplication  {//implements CommandLineRunner
 		// ✅ ALLOW localhost (add Render domain in deployment)
 		corsConfiguration.setAllowedOrigins(Arrays.asList(
 				"http://localhost:9099",
-				"https://your-app-name.onrender.com" // Add your Render domain here
+				"https://ehcacheproject.onrender.com" // Add your Render domain here
 		));
 
 		// ✅ Minimal but sufficient allowed headers
