@@ -99,6 +99,8 @@ If any of these rules are violated, a `400 Bad Request` is returned with details
 
 ## 💡 Notes
 
+💤 Note: This app is hosted on Render's free tier. If it hasn’t been used for a while, the backend may take 20–30 seconds to wake up on first request.
+If Swagger doesn’t load at first, please refresh the page.
 - This is a backend-only project — there is **no frontend**.
 - You can interact with the API directly via Swagger or tools like **Postman**.
 - Swagger may fail on deployed environments due to CORS — use Postman if needed.
