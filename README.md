@@ -10,7 +10,7 @@ A secure and performant Spring Boot application for managing books. Features inc
 - ✅ User Registration & Login (JWT + Refresh Token)
 - ✉️ Email Verification & Password Reset via Mail
 - 📚 Book Management (CRUD)
-- 🧠 Caching with Ehcache
+- 🧠 Caching with Ehcache(caching my GetToken(setting Up cacheEvict Perfectly) , getAllUser+getUser(setting up cachePut and cacheEvict ), 
 - 🔐 Secure Endpoints using Spring Security
 - ⚙️ Global Exception Handling
 - 🧪 Input Validation with:
@@ -34,6 +34,78 @@ A secure and performant Spring Boot application for managing books. Features inc
 
 ---
 
+## 🔗 Live API Docs
+
+You can explore and test all available endpoints using Swagger UI:  
+👉 [**Swagger UI**](https://ehcacheproject.onrender.com/swagger-ui/index.html)
+
+---
+
+## 🧑‍💻 How to Use the API
+
+### 1. 📝 **Register**
+
+- Use the `/api/v1/auth/register` endpoint to register a new user.
+- Make sure to enter a **valid email** — this will be used for verification.
+
+### 2. 📧 **Email Verification Required**
+
+- After registration, check your email inbox for a **verification link**.
+- Click it to verify your account.
+- **You cannot log in or use secured endpoints until your email is verified.**
+
+### 3. 🔐 **Authenticate**
+
+- Once verified, use the `/api/v1/auth/authenticate` endpoint to log in.
+- On successful login, you'll receive:
+  - ✅ **Access Token** (valid for **2 minutes**)
+  - 🔁 **Refresh Token**
+
+### 4. 🔄 **Token Refresh**
+
+- If your access token expires after 2 minutes, use `https://ehcacheproject.onrender.com/api/v1/auth/refresh-token` with your refresh token to get a new access token.
+
+### 5. 🚪 **Logout**
+
+- Use the `https://ehcacheproject.onrender.com/api/v1/auth/logout` endpoint to log out and invalidate your tokens.
+- ❗ This endpoint is available **only via Postman** or external tools — it's not accessible from Swagger UI.
+
+---
+
+## 🛡️ Role-Based Access
+
+There are **two roles** in this application:
+
+| Role        | Permissions |
+|-------------|-------------|
+| `SUPERADMIN` | ✅ Full access to all endpoints |
+| `ADMIN`      | ✅ Access to everything except:<br>❌ Cannot create new admins<br>❌ Cannot delete existing admins |
+
+Role assignment is done during user creation (in the `register` request payload).
+
+## ✅ Validation Rules
+
+During registration and authentication, the following validations are enforced:
+
+- `email` must be a **valid email format**
+- `password` must be a **strong password**:
+  - Minimum 8 characters
+  - At least 1 uppercase, 1 lowercase, 1 digit, and 1 special character
+- `username` must be unique and respect custom rules (e.g., no special characters)
+- `role` must be either `"ADMIN"` or `"SUPERADMIN"`
+
+If any of these rules are violated, a `400 Bad Request` is returned with details.
+
+
+## 💡 Notes
+
+- This is a backend-only project — there is **no frontend**.
+- You can interact with the API directly via Swagger or tools like **Postman**.
+- Swagger may fail on deployed environments due to CORS — use Postman if needed.
+
+  
+--------------------
+# IF  U WANT TO RUN IT LOCALLY : 
 ## 📦 Run with Docker
 
 ###1. 1.docker-compose up -d : starts ur containers first ...
