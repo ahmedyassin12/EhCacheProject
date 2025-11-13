@@ -17,24 +17,19 @@ public class CreateBookDto {
 
 
 
-    @NotNull
     @NotEmpty
     private String name;
 
     @NotEmpty
-    @NotNull
     private String category;
 
     @NotEmpty
-    @NotNull
     private String author;
 
     @NotEmpty
-    @NotNull
     private String publisher;
 
     @NotEmpty
-    @NotNull
     private String edition;
 
     @NotNull

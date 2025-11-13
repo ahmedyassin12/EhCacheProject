@@ -77,6 +77,25 @@ public class BookCachingTests {
 
 
     @Test
+    public void ComparingCachingVsUncaching(){
+
+        bookService.getAllBooks(); // since first call from DB
+
+
+        //here we mesure average of the speed of our method "getAllBooks"
+        long total = 0;
+        for (int i = 0; i < 10; i++) {
+            long start = System.nanoTime();
+            bookService.getAllBooks(); // or endpoint call
+            long end = System.nanoTime();
+            total += (end - start);
+        }
+        System.out.println("Average time: " + (total / 10) / 1_000_000 + " ms");
+
+
+    }
+
+    @Test
     public void BookService_getAllBookDtosCache_RetrurnsAllBookDtos()throws Exception {
 
         List <BookDto> bookDtos =bookService.getAllBooks() ;

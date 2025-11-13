@@ -3,7 +3,6 @@ package ehcache.example.ehCache.Service;
 import ehcache.example.ehCache.Dao.Bookdao;
 import ehcache.example.ehCache.Dao.TokenDAO;
 import ehcache.example.ehCache.Dao.UserDao;
-import ehcache.example.ehCache.Dto.CreateBookDto;
 import ehcache.example.ehCache.Dto.UserDto;
 import ehcache.example.ehCache.Dto.CreateUserDto;
 import ehcache.example.ehCache.Entity.Book;
@@ -23,12 +22,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import javax.cache.CacheManager;
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 
@@ -149,6 +145,14 @@ public class UserService {
 
     }
 
+
+
+
+
+
+
+
+
     @Caching(evict = {
             @CacheEvict(cacheNames = "AlluserDtos", key = "2L"),
             @CacheEvict(cacheNames = "userDtos",key = "#id")
@@ -167,6 +171,14 @@ public class UserService {
         return "User removed" ;
 
     }
+
+
+
+
+
+
+
+
 
 
 
@@ -212,6 +224,9 @@ public class UserService {
 
 
         user.setName(userDto.getName());
+
+        // if iwant to make my app better: if user change his email i will make him reConfirm his email when he
+        //reAuthenticate again ;
         user.setEmail(userDto.getEmail());
 
 

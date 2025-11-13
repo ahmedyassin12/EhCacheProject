@@ -7,7 +7,7 @@ RUN gradle clean build -x test --no-daemon
 
 # Stage 2: Run the app
  # Smaller image
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk as build
 WORKDIR /app
 
 # Use wildcard to handle version changes (e.g., 0.0.1-SNAPSHOT → 0.0.2-SNAPSHOT)

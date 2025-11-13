@@ -24,6 +24,7 @@ public class RegisterRequest {
 
     @UsernameValidator
     private String username;
+
     @StrongPassword
     private String password ;
 

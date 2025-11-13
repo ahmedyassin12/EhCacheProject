@@ -7,10 +7,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 @RestControllerAdvice
@@ -134,16 +137,21 @@ return ResponseEntity
 
 
     }
-    @ExceptionHandler(io.jsonwebtoken.ExpiredJwtException.class)
-    public ResponseEntity<?>handleException(io.jsonwebtoken.ExpiredJwtException e){
+        @ExceptionHandler(io.jsonwebtoken.ExpiredJwtException.class)
+        public ResponseEntity<?>handleException(io.jsonwebtoken.ExpiredJwtException e){
 
-        return ResponseEntity
-                .badRequest()
-                .body(e.getMessage()) ;
+            return ResponseEntity
+                    .badRequest()
+                    .body(e.getMessage()) ;
+
+
+        }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> handleValidationExceptions(MethodArgumentNotValidException ex) {
+       return  ResponseEntity.badRequest().body(ex.getMessage());
 
 
     }
-
-
 
 }
