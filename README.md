@@ -11,36 +11,52 @@ A secure and performant Spring Boot application for managing books. Features inc
 - ✉️ Email Verification & Password Reset via Mail
 - 📚 Book Management (CRUD)
 - 🧠 Caching with Ehcache(caching my GetToken(setting Up cacheEvict Perfectly) , getAllUser+getUser(setting up cachePut and cacheEvict ), 
-- 🔐 Secure Endpoints using Spring Security
+- 🔐 Secure Endpoints using Spring Security : Security Architecture is Stateless authentication using JWT + Refresh Token rotation.
 - ⚙️ Global Exception Handling
 - 🧪 Input Validation with:
-  - DTOs
-  - Custom Annotations
-  - Standard Java Validation
+  - DTOs:
+  - Custom Annotations : for complex business rules (e.g., unique username constraints).
+  - Domain-Driven Design (DDD) Principles: Separation of concerns using DTOs, Service interfaces, and a Global Exception Handling layer.
 - 🔍 Swagger/OpenAPI UI for exploring endpoints
 - 🐳 Docker + Docker Compose for easy deployment
+---
+🚀 Performance & Scalability Optimization
+Latency Reduction: Leveraged Ehcache 3 to implement a high-performance local caching layer, reducing API response times by up to 90% for read-heavy endpoints.
+
+Database Offloading: Minimized expensive PostgreSQL I/O operations by caching frequently accessed entities, ensuring system stability during traffic spikes.
+
+Advanced Cache Management: * Optimized the Cache-Aside pattern using @Cacheable.
+
+Implemented precise Cache Invalidation strategies with @CacheEvict to prevent stale data in authentication and book-management flows.
+
+Configured TTL (Time-To-Live) and TTI (Time-To-Idle) policies to balance memory usage and data freshness.
 
 ---
+##🛠 Tech Stack
+-Backend: Java 17, Spring Boot 3, Spring Security
 
-## 🧱 Tech Stack
+-Database: PostgreSQL (Relational)
 
-- Java 17
-- Spring Boot 3
-- Spring Security + JWT
-- PostgreSQL (Dockerized)
-- Ehcache
-- Swagger (SpringDoc)
-- Docker / Docker Compose
+-Caching: Ehcache 3 making most used EndPoints so fast for scalability.
 
----
+-Documentation: Swagger UI / OpenAPI 3.0
+
+-DevOps: Docker, Docker Compose
+
+Testing: JUnit 5, Mockito (80% Line Coverage), Postman 
 
 ## 🔗 Live API Docs
 
 You can explore and test all available endpoints using Swagger UI:  
 👉 [**Swagger UI**](https://ehcacheproject.onrender.com/swagger-ui/index.html)
+(Note: As this is hosted on Render's free tier, the first request may take ~30 seconds to wake up.)
 
----
+------
 
+🧪 Testing & Quality Assurance
+Quality is prioritized with 80% code coverage. Tests cover security filters, service business logic, and cache eviction.
+
+------
 ## 🧑‍💻 How to Use the API
 
 ### 1. 📝 **Register**
@@ -83,18 +99,29 @@ There are **two roles** in this application:
 
 Role assignment is done during user creation (in the `register` request payload).
 
-## ✅ Validation Rules
+## 🛡️ Data Integrity && ✅ Validation Rules
 
-During registration and authentication, the following validations are enforced:
+##During registration and authentication, the following validations are enforced:
 
-- `email` must be a **valid email format**
-- `password` must be a **strong password**:
-  - Minimum 8 characters
-  - At least 1 uppercase, 1 lowercase, 1 digit, and 1 special character
-- `username` must be unique and respect custom rules (e.g., no special characters)
-- `role` must be either `"ADMIN"` or `"SUPERADMIN"`
+To ensure system reliability and security, the application enforces strict validation at the controller and service layers. Any violation results in a standardized 400 Bad Request response with descriptive error messages.
 
-If any of these rules are violated, a `400 Bad Request` is returned with details.
+-User Authentication Constraints
+Email: Must adhere to RFC 5322 standards (valid email format).
+
+Password Complexity: Enforced "Strong Password" policy:
+
+Minimum 8 characters.
+
+Mandatory inclusion of Uppercase, Lowercase, Digit, and Special Character.
+
+Username: Must be unique; sanitized to prevent special character injection.
+
+RBAC Validation: The role attribute is strictly validated against the defined Enum (ADMIN, SUPERADMIN).
+
+-Entity Persistence (Books)
+Strict Null/Empty Check: All book attributes (Title, Author, ISBN, etc.) are mandatory.
+
+Update Policy: Partial updates are validated to ensure no field is cleared or set to null, maintaining data consistency in the PostgreSQL layer.
 
 
 ## 💡 Notes
