@@ -1,19 +1,29 @@
 package ehcache.example.ehCache.exceptions;
 
 
-
-import lombok.AllArgsConstructor;
-
 import java.util.Set;
 
 
 
-@AllArgsConstructor
 public class ObjectNotValidException extends RuntimeException{
 
 
     private final Set<String> errors ;
 
+
+    public ObjectNotValidException(Set<String> errors){
+
+        super(errors.toString());
+
+        this.errors=errors;
+
+
+    }
+
+
+    public  Set<String> geterrors(){
+        return this.errors;
+    }
 
 
 

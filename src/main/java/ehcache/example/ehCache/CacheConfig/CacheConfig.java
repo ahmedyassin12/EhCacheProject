@@ -5,6 +5,7 @@
     import ehcache.example.ehCache.token.Token;
     import org.ehcache.config.CacheConfiguration;
     import org.ehcache.config.builders.CacheConfigurationBuilder;
+    import org.ehcache.config.builders.ExpiryPolicyBuilder;
     import org.ehcache.config.builders.ResourcePoolsBuilder;
     import org.ehcache.jsr107.Eh107Configuration;
     import org.springframework.cache.annotation.EnableCaching;
@@ -14,6 +15,7 @@
     import javax.cache.CacheManager;
     import javax.cache.Caching;
     import javax.cache.spi.CachingProvider;
+    import java.time.Duration;
     import java.util.List;
 
 
@@ -34,7 +36,9 @@
                                 BookDto.class,  // Value type
                                 ResourcePoolsBuilder.heap(100) // Max entries in heap
 
-                        ).build(); //
+                        )
+                                .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofDays(1)))
+                                .build(); //
 
                 CacheConfiguration<Long, UserDto> Userconfiguration =
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
@@ -42,7 +46,10 @@
                                 UserDto.class,  // Value type
                                 ResourcePoolsBuilder.heap(100) // Max entries in heap
 
-                        ).build();
+                        )
+                                .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofDays(1)))
+
+                                .build();
 
                 CacheConfiguration<Long, List > GetAllUserconfiguration =
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
@@ -50,22 +57,29 @@
                                 List.class,  // Value type
                                 ResourcePoolsBuilder.heap(100) // Max entries in heap
 
-                        ).build();
+                        )   .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofDays(1)))
+
+                                .build();
                 CacheConfiguration<Long, List > GetAllBookconfiguration =
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
                                 Long.class , // Key type
                                 List.class,  // Value type
                                 ResourcePoolsBuilder.heap(1000) // Max entries in heap
 
-                        ).build();
+                        )
+                                .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofDays(1)))
+                                .build();
 
                CacheConfiguration<String, Token > JwtTokens =
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
                                 String.class , // Key type
                                 Token.class,  // Value type
-                                ResourcePoolsBuilder.heap(1000) // Max entries in heap
+                                ResourcePoolsBuilder.heap(1000)// Max entries in heap
 
-                        ).build();
+                        )
+                                .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofDays(7)))
+                                .build();
+
 
                 if (cacheManager.getCache("bookDtos", Long.class, BookDto.class) == null) {
                     cacheManager.createCache("bookDtos", // e to match @Cacheable

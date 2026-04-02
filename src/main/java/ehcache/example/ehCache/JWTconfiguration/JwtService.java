@@ -34,10 +34,7 @@ public class JwtService {
 
     private final   long refreshTokenExpiration=604800000;//7 days in ms
 
-    @Autowired
-private TokenDAO tokenDAO ;
-    @Autowired
-    private TokenService tokenService;
+
 
     public String extractUserName(String token) {
 
