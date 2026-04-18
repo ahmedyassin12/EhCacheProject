@@ -75,7 +75,7 @@ Quality is prioritized with 80% code coverage. Tests cover security filters, ser
 - Once verified, use the `/api/v1/auth/authenticate` endpoint to log in.
 - On successful login, you'll receive:
   - ✅ **Access Token** (valid for **2 minutes**)
-  - 🔁 **Refresh Token**
+  - 🔁 **Refresh Token** (valid for **7 days**)
 
 ### 4. 🔄 **Token Refresh**
 
