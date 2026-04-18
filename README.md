@@ -1,200 +1,353 @@
-# EhCacheProject
-# 📚 Book Management API (Spring Boot + JWT + Swagger + Docker)
+# 📚 Book Management API – Spring Boot + JWT + Ehcache + Docker 
+>Designed as a secure backend service for managing users and resources in a training-center-like environment.
 
-A secure and performant Spring Boot application for managing books. Features include JWT authentication, refresh tokens, email verification, password reset, validation with custom annotations, global exception handling, and Swagger API documentation — all Dockerized for easy deployment.
+[![Java](https://img.shields.io/badge/Java-17-blue.svg)](https://adoptium.net/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg)](https://www.postgresql.org/)
+[![Ehcache](https://img.shields.io/badge/Cache-Ehcache%203-orange.svg)](https://www.ehcache.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-blue.svg)](https://www.docker.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Swagger%20UI-success)](https://ehcacheproject.onrender.com/swagger-ui/index.html)
+[![Tests](https://img.shields.io/badge/Tests-100%2B-brightgreen.svg)]()
 
----
+A **production-style Book Management API** built with Spring Boot, demonstrating secure authentication, in-process caching with Ehcache 3, role-based access control, and clean layered architecture — fully Dockerized for easy local deployment.
 
-## 🚀 Features
-
-- ✅ User Registration & Login (JWT + Refresh Token)
-- ✉️ Email Verification & Password Reset via Mail
-- 📚 Book Management (CRUD)
-- 🧠 Caching with Ehcache(caching my GetToken(setting Up cacheEvict Perfectly) , getAllUser+getUser(setting up cachePut and cacheEvict ), 
-- 🔐 Secure Endpoints using Spring Security : Security Architecture is Stateless authentication using JWT + Refresh Token rotation.
-- ⚙️ Global Exception Handling
-- 🧪 Input Validation with:
-  - DTOs:
-  - Custom Annotations : for complex business rules (e.g., unique username constraints).
-  - Domain-Driven Design (DDD) Principles: Separation of concerns using DTOs, Service interfaces, and a Global Exception Handling layer.
-- 🔍 Swagger/OpenAPI UI for exploring endpoints
-- 🐳 Docker + Docker Compose for easy deployment
----
-🚀 Performance & Scalability Optimization
-Latency Reduction: Leveraged Ehcache 3 to implement a high-performance local caching layer, reducing API response times by up to 90% for read-heavy endpoints.
-
-Database Offloading: Minimized expensive PostgreSQL I/O operations by caching frequently accessed entities, ensuring system stability during traffic spikes.
-
-Advanced Cache Management: * Optimized the Cache-Aside pattern using @Cacheable.
-
-Implemented precise Cache Invalidation strategies with @CacheEvict to prevent stale data in authentication and book-management flows.
-
-Configured TTL (Time-To-Live) and TTI (Time-To-Idle) policies to balance memory usage and data freshness.
-
----
-##🛠 Tech Stack
--Backend: Java 17, Spring Boot 3, Spring Security
-
--Database: PostgreSQL (Relational)
-
--Caching: Ehcache 3 making most used EndPoints so fast for scalability.
-
--Documentation: Swagger UI / OpenAPI 3.0
-
--DevOps: Docker, Docker Compose
-
-Testing: JUnit 5, Mockito (80% Line Coverage), Postman 
-
-## 🔗 Live API Docs
-
-You can explore and test all available endpoints using Swagger UI:  
-👉 [**Swagger UI**](https://ehcacheproject.onrender.com/swagger-ui/index.html)
-(Note: As this is hosted on Render's free tier, the first request may take ~30 seconds to wake up.)
-
-------
-
-🧪 Testing & Quality Assurance
-Quality is prioritized with 80% code coverage. Tests cover security filters, service business logic, and cache eviction.
-
-------
-## 🧑‍💻 How to Use the API
-
-### 1. 📝 **Register**
-
-- Use the `/api/v1/auth/register` endpoint to register a new user.
-- Make sure to enter a **valid email** — this will be used for verification.
-
-### 2. 📧 **Email Verification Required**
-
-- After registration, check your email inbox for a **verification link**.
-- Click it to verify your account.
-- **You cannot log in or use secured endpoints until your email is verified.**
-
-### 3. 🔐 **Authenticate**
-
-- Once verified, use the `/api/v1/auth/authenticate` endpoint to log in.
-- On successful login, you'll receive:
-  - ✅ **Access Token** (valid for **2 minutes**)
-  - 🔁 **Refresh Token** (valid for **7 days**)
-
-### 4. 🔄 **Token Refresh**
-
-- If your access token expires after 2 minutes, use `https://ehcacheproject.onrender.com/api/v1/auth/refresh-token` with your refresh token to get a new access token.
-
-### 5. 🚪 **Logout**
-
-- Use the `https://ehcacheproject.onrender.com/api/v1/auth/logout` endpoint to log out and invalidate your tokens.
-- ❗ This endpoint is available **only via Postman** or external tools — it's not accessible from Swagger UI.
+> ✅ **Live Swagger UI**: [https://ehcacheproject.onrender.com/swagger-ui/index.html](https://ehcacheproject.onrender.com/swagger-ui/index.html)
+> *(Free tier — may cold start after inactivity. Wait ~30 seconds if a 503 appears.)*
 
 ---
 
-## 🛡️ Role-Based Access
+## ⭐ Key Highlights
 
-There are **two roles** in this application:
+- 🔐 Stateless JWT authentication with **access + refresh token rotation**
+- 📧 **Email verification** required before account activation
+- 🔑 **Password reset** flow via email token
+- ⚡ **Ehcache 3 in-process caching** — TTL, `@CacheEvict`, `@CachePut`, `@Cacheable`
+- 🛡️ Role-based access control — `SUPERADMIN` and `ADMIN` with distinct permissions
+- ✅ Input validation via custom annotations + Jakarta Bean Validation
+- 🌍 Centralized exception handling via `@RestControllerAdvice`
+- 🐳 Fully **Dockerized** — one command starts everything
+- 🧪 **100+ tests** — JUnit 5 + Mockito unit & integration + Postman
+- 📄 Fully documented via **Swagger (OpenAPI 3)**
 
-| Role        | Permissions |
-|-------------|-------------|
-| `SUPERADMIN` | ✅ Full access to all endpoints |
-| `ADMIN`      | ✅ Access to everything except:<br>❌ Cannot create new admins<br>❌ Cannot delete existing admins |
-
-Role assignment is done during user creation (in the `register` request payload).
-
-## 🛡️ Data Integrity && ✅ Validation Rules
-
-##During registration and authentication, the following validations are enforced:
-
-To ensure system reliability and security, the application enforces strict validation at the controller and service layers. Any violation results in a standardized 400 Bad Request response with descriptive error messages.
-
--User Authentication Constraints
-Email: Must adhere to RFC 5322 standards (valid email format).
-
-Password Complexity: Enforced "Strong Password" policy:
-
-Minimum 8 characters.
-
-Mandatory inclusion of Uppercase, Lowercase, Digit, and Special Character.
-
-Username: Must be unique; sanitized to prevent special character injection.
-
-RBAC Validation: The role attribute is strictly validated against the defined Enum (ADMIN, SUPERADMIN).
-
--Entity Persistence (Books)
-Strict Null/Empty Check: All book attributes (Title, Author, ISBN, etc.) are mandatory.
-
-Update Policy: Partial updates are validated to ensure no field is cleared or set to null, maintaining data consistency in the PostgreSQL layer.
-
-
-## 💡 Notes
-
-💤 Note: This app is hosted on Render's free tier. If it hasn’t been used for a while, the backend may take 20–30 seconds to wake up on first request.
-If Swagger doesn’t load at first, please refresh the page.
-- This is a backend-only project — there is **no frontend**.
-- You can interact with the API directly via Swagger or tools like **Postman**.
-- Swagger may fail on deployed environments due to CORS — use Postman if needed.
-
+---
   
---------------------
-# IF  U WANT TO RUN IT LOCALLY : 
-## 📦 Run with Docker
+  ## 🏗️ Architecture
+  
+  ```
+┌─────────────────────────────────────────────────────────────┐
+│                 Client (Postman / Swagger UI)               │
+└───────────────────────────┬─────────────────────────────────┘
+                            │ HTTP (JWT in Header)
+┌───────────────────────────▼─────────────────────────────────┐
+│              Security Filter (OncePerRequestFilter)         │
+│    Validates JWT & Checks Blacklist (1. Cache -> 2. DB)     │
+└───────────────────────────┬─────────────────────────────────┘
+                            │
+┌───────────────────────────▼─────────────────────────────────┐
+│               Controller Layer (@RestController)            │
+│          Handles HTTP, delegates to services, @Valid        │
+└───────────────────────────┬─────────────────────────────────┘
+                            │
+┌───────────────────────────▼─────────────────────────────────┐
+│                  Service Layer (@Service)                   │
+│      Business logic, @Cacheable, Token Revocation Logic     │
+└──────────────┬────────────────────────────┬─────────────────┘
+               │                            │
+┌──────────────▼──────────┐      ┌──────────▼─────────────────┐
+│  Repository Layer (JPA) │      │   Ehcache 3 (In-Process)   │
+│  PostgreSQL via Hibernate◄─────┤  Blacklist Mirror (7d TTL) │
+│ (Users, Books, Blacklist)│      │  User/Book Cache (Heap)    │
+└──────────────┬──────────┘      └────────────────────────────┘
+               │
+┌──────────────▼──────────┐
+│   PostgreSQL Database   │
+│  The "Source of Truth"  │
+└─────────────────────────┘
+  ```
 
-###1. 1.docker-compose up -d : starts ur containers first ...
+### Layer Responsibilities
 
-2. Build the Application 
-./gradlew clean build : This will generate the .jar file in build/libs/.
+**Controller Layer** — Receives HTTP requests, validates input via `@Valid`, delegates to services, returns structured responses.
 
-### 2. Build the Docker Image
+**Service Layer** — Contains all business logic: authentication flows, token rotation, cache management, and book CRUD operations. Uses DTOs to decouple internal entities from external API responses.
 
-      bash:
-      docker build -t spring/ehcache . 
+**Repository Layer** — Spring Data JPA repositories with custom JPQL queries for role-scoped data access.
 
-### 3. Start the App with Docker Compose
-      docker-compose up --build : This will: Start a PostgreSQL container then Launch your Spring Boot app on port 9099
+**Security Layer** — JWT filter chain via `OncePerRequestFilter`, role-based endpoint authorization, and Implements a Hybrid Blacklist Strategy: tokens are persisted in PostgreSQL for durability and mirrored in Ehcache (7-day TTL) for O(1) lookup performance. This covers manual logouts and proactive access token revocation during rotation..
 
- environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: book
-    ports:
-      - "5433:5432"
-      environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/book
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: password
-          ports:
-      - "9099:9090"  # Mapping host port 9099 to container port 9090
-    networks:
-      - spring-boot-network
+**Cache Layer** — Ehcache 3 in-process cache running inside the JVM. Ideal for single-instance deployments — zero external dependencies, no network overhead.
 
-🧪 Swagger Documentation
-Swagger UI: http://localhost:9090/swagger-ui.html
+---
 
-OpenAPI JSON: http://localhost:9090/v3/api-docs
+## ⚡ Ehcache 3 Caching Strategy
 
+This project deliberately uses **Ehcache 3** (in-process) rather than Redis (distributed) — a conscious architectural decision suited to single-instance deployments where external infrastructure overhead is unnecessary.
 
-🧹 Clean Architecture Highlights
-DTO Pattern – For cleaner request/response handling
+### What is Cached
 
-Custom Annotations – For advanced validation scenarios
+|  Cache Name |             Content             |   TTL  | TTI |      Eviction Trigger     |
+|      ---    |              ---                |   ---  | --- |            ---            |
+| `JwtTokens` |  Revoked Access/Refresh Tokens  | 7 days |  —  | Manual addition on Logout/Auth/Refresh |
+|   `users`   |       User objects by ID        | 1 day  |  _  | Profile update, deletion  |
+|  `allUsers` |       Full user list            | 1 day  |  —  | Any user add/update/delete|
+|   `books`   |       Book objects by ID        | 1 day  |  —  | Book update, deletion     |
+|  `allbooks` |       full books list           | 1 day  |  —  | Book add/update, delete   |
 
-Global Exception Handling – Clean error responses
+### Cache Invalidation Strategy
 
-Validation Layer – Uses javax.validation + custom validators
+Cache invalidation is handled using a combination of **Spring Cache annotations** and **manual eviction** for security-critical flows. This ensures data consistency while maintaining high performance.
 
-🧪 Testing & Dev Tools
+```java
+// 🔐 Token invalidation on logout (manual eviction for full control)
+public void logout(String token) {
+    // Remove all user tokens from cache
+    tokens.forEach(t ->
+        cacheManager.getCache("JwtTokens").evict(t.getToken())
+    );
 
--Postman tested
-
--JUnit coverage for key services
-
--Swagger for exploring & testing endpoints
-
-📬 Author
-👤  Ahmed Yassin (Trao360)  ⚙️ Backend Developer | BI Enthusiast
+    // Persist revocation in database
+    tokenDAO.revokeAllTokensByUser(user.getId());
+}
 
 
-📧 Reach out or open an issue to collaborate.
-⭐ Star the repo if you like it!
-📝 License This project is licensed under the MIT License.
+// 👤 Update user → refresh single user cache + invalidate user list cache
+@Caching(
+    put = {
+        @CachePut(cacheNames = "userDtos", key = "#result.id")
+    },
+    evict = {
+        @CacheEvict(cacheNames = "AlluserDtos", allEntries = true)
+    }
+)
+public UserDto updateUser(UpdateRequest request) { ... }
+
+
+// ❌ Delete user → remove from individual cache + invalidate list cache
+@Caching(evict = {
+    @CacheEvict(cacheNames = "userDtos", key = "#id"),
+    @CacheEvict(cacheNames = "AlluserDtos", allEntries = true)
+})
+public void deleteUser(Long id) { ... }
+
+
+```
+
+### TTL
+
+- **TTL (Time-To-Live)** — entry expires X time after creation regardless of access. Used for security-sensitive data (tokens) where freshness is mandatory.
+
+### Why Ehcache Over Redis Here
+
+|            Concern            | Ehcache (this project) |     Redis   |
+|             ---               |            ---         |      ---    |
+|     External service needed   |         ❌ No         |    ✅ Yes   |
+|         Network overhead      |         ❌ None       | ✅ Per call |
+|         Single instance       |      ✅ Perfect fit   |   Overkill  |
+|  Multi-instance / distributed |      ❌ Not suitable  | ✅ Required |
+|       Setup complexity        |      Minimal           | Significant |
+
+> For distributed deployments across multiple instances, Redis would be the correct choice — as demonstrated in my [E-Learning project](https://github.com/ahmedyassin12/E-LearningAPP).
+
+---
+
+## 🔐 Security
+
+- Stateless JWT with **access token (2 min) + refresh token rotation**
+- `OncePerRequestFilter` validates every request before it reaches controllers
+- Proactive Token Blacklisting: Implements a strict revocation policy to prevent session hijacking:
+    Logout: Both Access and Refresh tokens are immediately moved to the blacklist.
+    Auth & Refresh Endpoints: The previous Access Token is revoked as soon as a new one is issued, ensuring only the most recent credential is valid.
+    Persistence: All revoked tokens are stored in PostgreSQL (Source of Truth) and mirrored in Ehcache (High-speed check) with a 7-day TTL.
+    - Email verification required before account activation
+    - Strong password enforced via custom `@StrongPassword` annotation
+    - Role-based authorization — `SUPERADMIN` vs `ADMIN` permission scoping
+
+---
+
+## 👥 Role-Based Access Control
+
+| Role | Permissions |
+|---|---|
+| `SUPERADMIN` | Full access to all endpoints including admin management |
+| `ADMIN` | Full book CRUD + user management — cannot create or delete other admins |
+
+---
+
+## 📧 Auth Flows
+
+### Registration & Verification
+```
+POST /api/v1/auth/register
+      ↓
+Account created (disabled)
+      ↓
+Verification token generated (UUID, 30 min expiry)
+      ↓
+Verification email sent
+      ↓
+GET /api/v1/auth/verify?token=...
+      ↓
+Account activated ✅ → login now available
+```
+
+### Password Reset
+```
+POST /api/v1/auth/forgot-password  (email submitted)
+      ↓
+Reset token generated + emailed
+      ↓
+POST /api/v1/auth/reset-password?token=...
+      ↓
+Password updated ✅
+```
+
+---
+
+## ✅ Validation & Error Handling
+
+Custom validation layer collects **all** violations before returning — not just the first one:
+
+```json
+{
+  "errors": [
+    "Password must contain at least one uppercase letter",
+    "Username contains invalid characters",
+    "Email format is invalid"
+  ]
+}
+```
+
+Custom annotations implemented:
+- `@StrongPassword` — minimum 8 chars, uppercase, lowercase, digit, special character
+- `@UsernameValidator` — unique username, no special character injection
+- `@ValidRole` — strictly validates against `ADMIN` / `SUPERADMIN` enum
+
+---
+
+## 🧪 Testing
+
+100+ test cases with 80% line coverage.
+
+|      Layer       |         Framework          |                 What's Tested                      |
+|       ---        |            ---             |                      ---                           |
+|  Service Layer   |     JUnit 5 + Mockito      |           Business logic, cache eviction           |
+| Repository Layer |   JUnit 5 + `@DataJpaTest` |               Custom JPQL queries                  |
+| Controller Layer | JUnit 5 + `@SpringBootTest`|                 important EndPoints                |
+|       API        |           Postman          | All endpoints — auth flows, book CRUD, edge cases  |
+
+```bash
+./gradlew test
+```
+
+---
+
+## 🛠️ Tech Stack
+
+| Technology | Purpose |
+|---|---|
+| **Spring Boot 3.1** | REST API framework |
+| **Spring Security + JWT** | Authentication & authorization |
+| **Spring Data JPA (Hibernate)** | ORM & database access |
+| **PostgreSQL 15** | Relational database |
+| **Ehcache 3** | In-process caching (TTL ) |
+| **Docker & Docker Compose** | Containerized local environment |
+| **Swagger (OpenAPI 3)** | API documentation |
+| **JUnit 5 + Mockito** | Unit & integration testing |
+| **Gradle** | Build tool |
+
+---
+
+## 💡 Design Decisions
+
+**Why Ehcache over Redis?**
+This is a single-instance application with no distributed deployment requirement. Ehcache runs inside the JVM — zero network overhead, zero external dependencies, zero infrastructure cost. Redis would add unnecessary complexity for a single-instance use case. For distributed caching across multiple instances, see my [E-Learning project](https://github.com/ahmedyassin12/E-LearningAPP) which uses Redis.
+
+**Why short access token expiry (2 minutes)?**
+Short-lived access tokens minimize the window of exposure if a token is intercepted. The refresh token rotation ensures seamless UX — the client transparently gets a new access token without forcing re-login.
+
+**Why collect all validation errors instead of failing fast?**
+Returning all violations at once gives API consumers a complete picture of what needs fixing. Failing on the first error forces multiple round trips for multi-field forms — poor developer experience.
+
+**Why a Hybrid Blacklist (DB + Cache)???**
+We prioritize both Persistence and Performance. Using a Database ensures that blacklisted tokens stay invalid even after a server restart. Using Ehcache as a mirror allows our SecurityFilter to reject malicious requests in microseconds without overloading the database.
+
+Why 7-Day TTL for the Blacklist Cache?
+Since the Refresh Token has a maximum life of 7 days, any token (Access or Refresh) added to the blacklist must remain there for the full duration of that potential window. This prevents a "ghost" token from being reused if the cache were to expire before the token's internal cryptographic expiration..
+---
+
+## ⚙️ Setup & Run
+
+### 🔑 Environment Variables
+
+```properties
+# EmailVerification 
+EMAIL_Username=your_brevo_username
+EMAIL_PASSWORD=your_Brevo_password
+EMAIL_Sender=your_email@gmail.com
+
+```
+
+### 🐳 Docker (Recommended — one command)
+
+```bash
+git clone https://github.com/ahmedyassin12/EhCacheProject.git
+cd EhCacheProject
+docker-compose up --build
+```
+
+This starts:
+- Spring Boot API on `http://localhost:9099`
+- PostgreSQL on port `5433`
+
+Access Swagger: [http://localhost:9099/swagger-ui.html](http://localhost:9099/swagger-ui.html)
+
+### ▶️ Manual Run
+
+```bash
+./gradlew clean build
+./gradlew bootRun
+```
+
+---
 
 
 
+> ⚠️ Never commit secrets. Use `.env` files locally.
+
+---
+
+## 📡 API Documentation
+
+All endpoints available via Swagger:
+
+👉 [https://ehcacheproject.onrender.com/swagger-ui/index.html](https://ehcacheproject.onrender.com/swagger-ui/index.html)
+
+**Quick start:**
+1. `POST /api/v1/auth/register` — create account
+2. Verify email via link received
+3. `POST /api/v1/auth/authenticate` — get access + refresh tokens
+4. Use access token as `Bearer` in all secured endpoints
+5. `POST /api/v1/auth/refresh-token` — get new access token when expired
+6. `POST /api/v1/auth/logout` — invalidate tokens (Postman only)
+
+---
+
+## 📌 Future Improvements
+
+- Implement cursor-based pagination
+- Introduce rate limiting (Bucket4j)
+- Add centralized logging (ELK)
+
+---
+
+## 👤 Author
+
+**Ahmed Yassine Zouaoui**
+Backend Developer — Java / Spring Boot
+
+---
+
+## 📝 License
+
+MIT License
