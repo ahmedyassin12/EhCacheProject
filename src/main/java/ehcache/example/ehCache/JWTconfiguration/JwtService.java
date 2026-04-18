@@ -113,11 +113,6 @@ public class JwtService {
     }
 
 
-    @CacheEvict(cacheNames = "JwtTokens", key = "#token")
-    public void evictTokenFromCache(String token) {
-        // Empty method: @CacheEvict annotation handles the eviction.
-
-    }
 
 
     //change

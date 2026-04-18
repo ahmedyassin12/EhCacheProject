@@ -17,9 +17,9 @@ services:
 
   spring-boot-app:
     container_name: spring-ehcache
-    image: spring/ehcache  # custome java image
+    build: .  # build from docker file
     ports:
-      - "9099:9090"  # Mapping host port 9099 to container port 9090
+      - "9099:8080"  # Mapping host port 9099 to container port 9090
     volumes:
       - /mnt/c/ehCache/src:/ehCache/src
 

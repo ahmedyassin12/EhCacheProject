@@ -5,7 +5,10 @@ import ehcache.example.ehCache.CustomeAnnotation.StrongPassword;
 import ehcache.example.ehCache.Dao.UserDao;
 import ehcache.example.ehCache.Dao.VerificationTokenRepository;
 import ehcache.example.ehCache.Entity.User;
+import ehcache.example.ehCache.auth.Dto.ForgetPasswordRequest;
+import ehcache.example.ehCache.auth.Dto.RegisterRequest;
 import ehcache.example.ehCache.token.VerificationToken;
+import ehcache.example.ehCache.validator.ObjectValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +25,8 @@ public class VerificationEmailController {
     private final VerificationTokenRepository tokenRepository;
     private final UserDao userDao;
     private final VerificationTokenRepository verificationTokenRepository;
+    private final ObjectValidator<ForgetPasswordRequest> forgetPasswordRequestObjectValidator ;
+
     @Autowired
     private final PasswordEncoder passwordEncoder;
 
@@ -34,12 +39,7 @@ public class VerificationEmailController {
         return "Email verified successfully! 🎉 Now you can login.";
     }
 
-    @GetMapping("/reset-password")
-    public ResponseEntity<String> validateResetToken(@RequestParam("token") String token) {
-        getValidTokenOrThrow(token);
 
-        return ResponseEntity.ok(token);
-    }
 
 
     private VerificationToken getValidTokenOrThrow(String token) {
@@ -59,17 +59,34 @@ public class VerificationEmailController {
         return verificationToken;
     }
 
+    @GetMapping("/Email-reset-password")
+    public ResponseEntity<String > resetPassword(@RequestParam("token") String token) {
 
+        VerificationToken verificationToken = tokenRepository.findByToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid token."));
+
+        if (verificationToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+
+            throw new RuntimeException("Token expired.");
+        }
+
+
+        return ResponseEntity.ok(
+
+                "Token valid. Now use POST /reset-password with this token + new password."
+
+        ) ;
+    }
 
 
     //after validate his email we make him change his password :
     @PostMapping("/reset-password")
-    public ResponseEntity<String> ChangePassword(@RequestParam("token")String token,
-                                                 @RequestParam @StrongPassword String newPassword,
-                                                 @RequestParam @StrongPassword String ConfirmationPassword
+    public ResponseEntity<String> ChangePassword(
+                                                 @RequestBody ForgetPasswordRequest request
 
     ) {
-        VerificationToken verificationToken = tokenRepository.findByToken(token)
+        forgetPasswordRequestObjectValidator.validate(request);
+        VerificationToken verificationToken = tokenRepository.findByToken(request.getToken())
                 .orElseThrow(() -> new RuntimeException("Invalid verification token"));
 
         if (verificationToken.getExpiresAt().isBefore(LocalDateTime.now())) {
@@ -80,10 +97,10 @@ public class VerificationEmailController {
 
         User user=verificationToken.getUser() ;
 
-        if (!newPassword.equals(ConfirmationPassword))
+        if (!request.getNewPassword().equals(request.getConfirmationPassword()))
             return ResponseEntity.badRequest().body("Passwords do not match.");
 
-        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
 
         if (!user.isEnabled()) {
             user.setEnabled(true);
@@ -95,7 +112,7 @@ public class VerificationEmailController {
         tokenRepository.delete(verificationToken);
 
 
-        return ResponseEntity.badRequest().body( "Password  changed successfully! 🎉 Now you can login with new Password.");
+        return ResponseEntity.ok().body( "Password  changed successfully! 🎉 Now you can login with new Password.");
 
     }
 

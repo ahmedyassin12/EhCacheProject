@@ -65,10 +65,9 @@ public class LogoutService implements LogoutHandler {
 
             UserDto user = userService.getUserByUsername(username);
 
-            List<Token> tokens = tokenDAO.findAllValidTokenByUser(user.getId()) ;
+                List<Token> tokens = tokenDAO.findAllValidTokenByUser(user.getId()) ;
 
-            tokens.forEach(t->cacheManager.getCache("JwtTokens").remove( t.getToken() ) );
-
+                tokens.forEach(t->cacheManager.getCache("JwtTokens").remove( t.getToken() ) );
 
             tokenDAO.revokeAllTokensByUser(user.getId());
 
