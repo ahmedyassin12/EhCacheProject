@@ -285,6 +285,7 @@ To maintain a "Zero-Leak" security policy, the maximum lifespan of a cached sess
 ### 🔑 Environment Variables
 
 ```properties
+SPRING_PROFILES_ACTIVE=Local
 # EmailVerification 
 EMAIL_Username=your_brevo_username
 EMAIL_PASSWORD=your_Brevo_password
