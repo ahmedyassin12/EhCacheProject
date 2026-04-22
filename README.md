@@ -41,40 +41,40 @@ A **production-style Book Management API** built with Spring Boot, demonstrating
                             │ HTTP (JWT in Header)
 ┌───────────────────────────▼─────────────────────────────────┐
 │              Security Filter (OncePerRequestFilter)         │
-│    Validates JWT & Checks Blacklist (1. Cache -> 2. DB)     │
+│   Validates JWT: (1. Check Cache -> 2. If Miss, Check DB)   │
 └───────────────────────────┬─────────────────────────────────┘
                             │
 ┌───────────────────────────▼─────────────────────────────────┐
 │               Controller Layer (@RestController)            │
-│          Handles HTTP, delegates to services, @Valid        │
+│          Handles HTTP, delegates to services       │
 └───────────────────────────┬─────────────────────────────────┘
                             │
 ┌───────────────────────────▼─────────────────────────────────┐
 │                  Service Layer (@Service)                   │
-│      Business logic, @Cacheable, Token Revocation Logic     │
+│      Business logic, @Cacheable, Token Eviction Logic       │
 └──────────────┬────────────────────────────┬─────────────────┘
                │                            │
 ┌──────────────▼──────────┐      ┌──────────▼─────────────────┐
-│  Repository Layer (JPA) │      │   Ehcache 3 (In-Process)   │
-│  PostgreSQL via Hibernate◄─────┤  Blacklist Mirror (7d TTL) │
-│ (Users, Books, Blacklist)│      │  User/Book Cache (Heap)    │
-└──────────────┬──────────┘      └────────────────────────────┘
-               │
-┌──────────────▼──────────┐
-│   PostgreSQL Database   │
-│  The "Source of Truth"  │
-└─────────────────────────┘
+│  Repository Layer (JPA) │      │    Ehcache 3 (In-Process)  │
+│  PostgreSQL via Hibernate◄─────┤ Eviction-Based Invalidation│
+│ (Users, Books, Blacklist)│      │ User/Book/Token (Performance)│
+└──────────────┬──────────┘      └────────────┬───────────────┘
+               │                              │ 
+┌──────────────▼──────────┐      ┌────────────▼───────────────┐
+│   PostgreSQL Database   │ <────┤       JVM Heap Memory      │
+│  The "Source of Truth"  │      │  (If Cache Miss: Fetch & Sync)
+└─────────────────────────┘      └────────────────────────────┘
   ```
 
 ### Layer Responsibilities
 
-**Controller Layer** — Receives HTTP requests, validates input via `@Valid`, delegates to services, returns structured responses.
+**Controller Layer** — Receives HTTP requests, delegates to services, returns structured responses.
 
-**Service Layer** — Contains all business logic: authentication flows, token rotation, cache management, and book CRUD operations. Uses DTOs to decouple internal entities from external API responses.
+**Service Layer** — Contains all business logic: authentication flows, token rotation, cache management, and book CRUD operations. Uses DTOs to decouple internal entities from external API responses, also it implements a high-granularity validation strategy using a custom ObjectValidator<T> (wrapping Jakarta Bean Validation) to collect and return all constraint violations simultaneously for a better consumer experience
 
 **Repository Layer** — Spring Data JPA repositories with custom JPQL queries for role-scoped data access.
 
-**Security Layer** — JWT filter chain via `OncePerRequestFilter`, role-based endpoint authorization, and Implements a Hybrid Blacklist Strategy: tokens are persisted in PostgreSQL for durability and mirrored in Ehcache (7-day TTL) for O(1) lookup performance. This covers manual logouts and proactive access token revocation during rotation..
+**Security Layer** — Implements a Durable-First validation flow. The security filter treats PostgreSQL as the absolute Source of Truth for token validity. To optimize performance, validated token states are cached in Ehcache. On logout or token rotation, the system evicts the cached entry, forcing the next request to re-verify against the database...
 
 **Cache Layer** — Ehcache 3 in-process cache running inside the JVM. Ideal for single-instance deployments — zero external dependencies, no network overhead.
 
@@ -152,17 +152,21 @@ public void deleteUser(Long id) { ... }
 ---
 
 ## 🔐 Security
+:
 
-- Stateless JWT with **access token (2 min) + refresh token rotation**
-- `OncePerRequestFilter` validates every request before it reaches controllers
-- Proactive Token Blacklisting: Implements a strict revocation policy to prevent session hijacking:
-    Logout: Both Access and Refresh tokens are immediately moved to the blacklist.
-    Auth & Refresh Endpoints: The previous Access Token is revoked as soon as a new one is issued, ensuring only the most recent credential is valid.
-    Persistence: All revoked tokens are stored in PostgreSQL (Source of Truth) and mirrored in Ehcache (High-speed check) with a 7-day TTL.
-    - Email verification required before account activation
-    - Strong password enforced via custom `@StrongPassword` annotation
-    - Role-based authorization — `SUPERADMIN` vs `ADMIN` permission scoping
+🔐 Stateless JWT: Access token (2 min) + Refresh token rotation.
 
+🛡️ Zero-Trust Validation: PostgreSQL acts as the absolute Source of Truth for token status; OncePerRequestFilter validates every request.
+
+⚡ Cache-Aside Acceleration: Valid sessions are cached in Ehcache to minimize DB overhead.
+
+❌ Security via Eviction: Logout, Auth, or Refresh events trigger immediate cache eviction, forcing a re-verification against the persistent DB.
+
+📧 Account Integrity:Email verification required after Account registration action, Also custom @Username and  @StrongPassword enforcement.
+
+🛡️ Role-Based Access Control (RBAC): Strict permission scoping for ADMIN/SUPER_ADMIN roles using Spring Security's
+    method-level protection.
+    
 ---
 
 ## 👥 Role-Based Access Control
@@ -269,11 +273,11 @@ Short-lived access tokens minimize the window of exposure if a token is intercep
 **Why collect all validation errors instead of failing fast?**
 Returning all violations at once gives API consumers a complete picture of what needs fixing. Failing on the first error forces multiple round trips for multi-field forms — poor developer experience.
 
-**Why a Hybrid Blacklist (DB + Cache)???**
-We prioritize both Persistence and Performance. Using a Database ensures that blacklisted tokens stay invalid even after a server restart. Using Ehcache as a mirror allows our SecurityFilter to reject malicious requests in microseconds without overloading the database.
+**Why PostgreSQL-backed Validation with Cache Eviction?**
+We prioritize Integrity over "soft" session state. By using PostgreSQL as the absolute Source of Truth, we ensure that security checks are always accurate and survive server restarts. Ehcache/Redis is used strictly as a Performance Accelerator for valid sessions. On any security event (Logout, new Login, or Token Refresh), we evict the cached entry. This "Fail-Safe" design forces the system to re-verify the token against the persistent database, preventing "ghost sessions" that could occur if a cache becomes stale.
 
-Why 7-Day TTL for the Blacklist Cache?
-Since the Refresh Token has a maximum life of 7 days, any token (Access or Refresh) added to the blacklist must remain there for the full duration of that potential window. This prevents a "ghost" token from being reused if the cache were to expire before the token's internal cryptographic expiration..
+**Why a 7-Day TTL for the Token Cache?**
+To maintain a "Zero-Leak" security policy, the maximum lifespan of a cached session is synchronized with the Refresh Token expiry (7 days). This ensures that the application doesn't hold onto session metadata longer than the cryptographic validity of the refresh token itself, while also ensuring that frequently used valid tokens stay in memory for high-speed access.
 ---
 
 ## ⚙️ Setup & Run
